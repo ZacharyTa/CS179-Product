@@ -1,93 +1,60 @@
 "use client";
 import { useState } from "react";
-
-interface Container {
-  item: string;
-  location: { row: number; column: number };
-  index?: number;
-}
-
-const dummy: Container[] = [
-  {
-    item: "One",
-    location: { row: 0, column: 0 },
-  },
-  {
-    item: "Two",
-    location: { row: 0, column: 1 },
-  },
-  {
-    item: "Three",
-    location: { row: 0, column: 2 },
-  },
-  {
-    item: "Four",
-    location: { row: 1, column: 0 },
-  },
-  {
-    item: "Five",
-    location: { row: 1, column: 1 },
-  },
-  {
-    item: "Six",
-    location: { row: 1, column: 2 },
-  },
-  {
-    item: "Seven",
-    location: { row: 2, column: 0 },
-  },
-  {
-    item: "Eight",
-    location: { row: 2, column: 1 },
-  },
-  {
-    item: "Nine",
-    location: { row: 2, column: 2 },
-  },
-];
+import { Container } from "@/lib/types";
+import { useGridData } from "@/hooks/useGridData";
 
 interface ShipGridProps {
-  containers: Container[];
+  containers?: Container[];
+  columns: number;
+  rows: number;
 }
 
-export default function ShipGrid({ containers = dummy }: ShipGridProps) {
-  const [gridContainers, setGridContainers] = useState<Container[]>();
-
-  const updateGrid = () => {
-    cordsToIndex(containers);
-    console.log(gridContainers);
-  };
-
-  const cordsToIndex = (containerss: Container[]) => {
-    const newContainers: Container[] = [];
-    for (let i = 0; i < containers.length; i++) {
-      const newContainer = containerss.at(i);
-      if (newContainer) {
-        newContainer.index =
-          newContainer?.location.row * 3 + newContainer?.location.column; //Row * numCol * col
-        newContainers.push(newContainer);
-      }
-    }
-    setGridContainers(newContainers.sort().reverse());
-  };
+const ShipGrid: React.FC<ShipGridProps> = ({
+  containers = [],
+  columns,
+  rows,
+}) => {
+  const { gridSlots, selectedGridSlots, selectGridSlot } = useGridData({
+    containers,
+    columns,
+    rows,
+  });
 
   return (
     <>
-      <div className="grid grid-cols-3 grid-rows-3 gap-4 " dir="rtl">
-        {gridContainers &&
-          gridContainers?.map((container) => (
+      <div
+        className={`grid gap-1`}
+        style={{
+          gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
+          gridTemplateRows: `repeat(${rows}, minmax(0, 1fr))`,
+        }}
+        dir="rtl"
+      >
+        {gridSlots &&
+          gridSlots?.map((slot, index) => (
             <div
-              key={container.index}
-              className={`hover:bg-green-500 text-center`}
+              key={index}
+              className={`flex items-center justify-center text-center border aspect-square text-xs ${
+                slot
+                  ? selectedGridSlots.has(index)
+                    ? "bg-green-500"
+                    : "bg-gray=200"
+                  : "bg-white"
+              } hover:opacity-70`}
+              onClick={() => slot && selectGridSlot(index)}
             >
-              {container.item}
+              <span className="truncate">{slot ? slot?.item : "Empty"}</span>
             </div>
           ))}
       </div>
-      <button className="btn btn-square btn-primary" onClick={updateGrid}>
-        {" "}
-        Click me
+      <button
+        className="btn btn-square btn-primary mt-4"
+        onClick={() => console.log(selectedGridSlots)}
+      >
+        Log Selected Containers
       </button>
     </>
   );
-}
+};
+
+export default ShipGrid;

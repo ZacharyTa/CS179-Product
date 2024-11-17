@@ -28,11 +28,11 @@ export default function handleBalancing(manifestText) {
    // Return requirements:
     // List of operations the user should perform in order (each operation should have an estimated execution time in minutes)
     // Data format:
-    // [{name, time, oldRow, oldColumn, newRow, newColumn}, ...]
+    // [{type, name, time, oldRow, oldColumn, newRow, newColumn}, ...]
     // [...
-    // {name: "Ram", time: 4, oldRow: 1, oldColumn: 4, newRow: 1, newColumn: 8},
-    // {name: "Cat", time: 1, oldRow: 1, oldColumn: 4, newRow: 2, newColumn: 4},
-    // {name: "Dog", time: 2, oldRow: 1, oldColumn: 4, newRow: 2, newColumn: 5},
+    // {type: "move", name: "Ram", time: 4, oldRow: 1, oldColumn: 4, newRow: 1, newColumn: 8},
+    // {type: "move", name: "Cat", time: 1, oldRow: 1, oldColumn: 4, newRow: 2, newColumn: 4},
+    // {type: "move", name: "Dog", time: 2, oldRow: 1, oldColumn: 4, newRow: 2, newColumn: 5},
     // ....]
     return optimalOperations;
 }

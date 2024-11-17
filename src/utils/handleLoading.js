@@ -37,9 +37,9 @@ export default function handleLoading(manifestText, operations) {
     // Data format:
     // [{type, name, time, row, column}, ...]
     // [... 
-    // {type: "onload", name: "Dog", time: 12, row: 1, column: 12},
-    // {type: "offload", name: "beans", time: 9, row: 0, column: 0}, // For offload operations, set row/column to 0
-    // {type: "onload", name: "Cat", time: 19, row: 2, column: 12},
+    // {type: "move", name: "Beans", time: 1, oldRow: 1, oldColumn: 4, newRow: 1, newColumn: 5},
+    // {type: "offload", name: "Beans", time: 12, oldRow: 1, oldColumn: 5, newRow: 0, newColumn: 0}, // Offload: Set newRow/newColumn to 0
+    // {type: "onload", name: "Dog", time: 4, oldRow: 0, oldColumn: 0, newRow: 1, newColumn: 8}, // Onload: set oldRow/oldColumn to 0
     // ....]
     return optimalOperations;
 }

@@ -35,7 +35,7 @@ export default function handleLoading(manifestText, operations) {
     // Return requirements:
     // List of operations the user should perform in order (each operation should have an estimated execution time in minutes)
     // Data format:
-    // [{type, name, time, row, column}, ...]
+    // [{type, name, time, oldRow, oldColumn, newRow, newColumn}, ...]
     // [... 
     // {type: "move", name: "Beans", time: 1, oldRow: 1, oldColumn: 4, newRow: 1, newColumn: 5},
     // {type: "offload", name: "Beans", time: 12, oldRow: 1, oldColumn: 5, newRow: 0, newColumn: 0}, // Offload: Set newRow/newColumn to 0

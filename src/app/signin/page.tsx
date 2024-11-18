@@ -7,7 +7,7 @@ export default function SignInPage() {
   const [name, setName] = useState<string>("");
 
   const handleSignIn = () => {
-    if (name?.toLocaleLowerCase() === "zachary") router.push("/work");
+    if (name?.toLocaleLowerCase() === "zachary") router.push("/selection");
   };
 
   return (

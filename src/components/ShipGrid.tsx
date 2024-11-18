@@ -23,7 +23,7 @@ const ShipGrid: React.FC<ShipGridProps> = ({
   return (
     <>
       <div
-        className={`grid gap-1`}
+        className={`grid gap-1 bg-transparent`}
         style={{
           gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
           gridTemplateRows: `repeat(${rows}, minmax(0, 1fr))`,
@@ -51,12 +51,6 @@ const ShipGrid: React.FC<ShipGridProps> = ({
             </div>
           ))}
       </div>
-      <button
-        className="btn btn-square btn-primary mt-4"
-        onClick={() => console.log(selectedGridSlots)}
-      >
-        Log Selected Containers
-      </button>
     </>
   );
 };

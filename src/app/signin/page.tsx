@@ -7,7 +7,8 @@ export default function SignInPage() {
   const [name, setName] = useState<string>("");
 
   const handleSignIn = () => {
-    if (name?.toLocaleLowerCase() === "zachary") router.push("/selection");
+    if (name?.toLocaleLowerCase() === "zachary")
+      router.push("/manifest-upload");
   };
 
   return (

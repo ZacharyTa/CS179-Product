@@ -29,7 +29,7 @@ const ManifestUpload: React.FC<ManifestUploadProps> = ({
         <input
           type="file"
           accept=".txt"
-          className="file-input file-input-bordered file-input-primary file-input-sm w-full max-w-xs"
+          className="file-input file-input-bordered file-input-primary text-base-content file-input-sm w-full max-w-xs"
           onChange={handleFileChange}
         />
       </label>

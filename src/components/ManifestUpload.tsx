@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import handleBalancing from "@/utils/handleBalancing";
 
 interface ManifestUploadProps {
   onManifestUpload: (manifestText: string) => void; // Pass this to parent component
@@ -18,6 +19,12 @@ const ManifestUpload: React.FC<ManifestUploadProps> = ({
       const text = await file.text();
       setManifestText(text);
       onManifestUpload(text);
+
+
+      
+      const balancingOperations = handleBalancing(text);
+      console.log("From handleBalancing: ", balancingOperations);
+
     }
   };
   return (

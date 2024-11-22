@@ -2,62 +2,42 @@
 //class to represent Problem states (tree structure)
 class Problem{
     
-    constructor(ship, time){         //current state
+    constructor(ship,buffer, time){         //current state
         this.grid = ship;
-        // this.parent = parent; 
-        this.time = time;
-
-        //current coordinate -> using these inside validate moves
-        // this.x = x;
-        // this.y = y
-        //this.movement = movement; //stores string "left" or "right" (for unloading/loading I think u can just set it arbitrarily to anything and pass)
-    }
-
-    setTime(time){
+        this.buffer = buffer; 
         this.time = time;
     }
 
-
-    getGrid(){
-        return this.grid;
-    }
-
-    getTime(){
-        return this.time;
-    }
-
-
-    // validateMoves(grid){ //this one is implement for each operations instead
-        
-    // }
-
+    setTime(time) { this.time = time;}
+    getGrid(){return this.grid;}
+    getTime(){return this.time;}
 
     //after getting the optimal move (based on time), changes location of the container to the wanted location
-    setMove(newX, newY, name){
+    setGrid(newX, newY, name){
         //something like:
         /**
          * at ship[newx][newy] = name (one container at a time)
          */
     }
 
+    setBuffer(nex, newY, name){}
 
+    bufferEmpty(){}; //returns true if nothing is in the buffer
 }
-
-
-class Buffer{
-    constructor(){
-        this.grid = Array.from({length: 4}, ()=> new Array(24).fill(null)); //empty 4x24 grid
-    }
-
-    isEmpty(){}; //returns true if nothing is in the buffer
-    containers(){}; //maybe return all containers that are in here
-
-}
-
 
 
 //Node structure 
+// class Node{
+//     constructor(state, parent = null, solution, time){
+//         this.state = state;
+//         this.parent = parent;
+//         this.solution = solution;
+//         this.time = time;
+//     }
 
+
+
+// }
 
 
 
@@ -76,9 +56,9 @@ function processData(manifestText){
         var name = info[3].trim();
 
         //contents needs to flip when stored in to grid
-        var flip = 7 - row;
-        if (flip >= 0 && flip < 8 && col >= 0 && col < 12){
-            grid[flip][col] = {w, name}; //@ each grid, has weight and name
+        // var flip = 7 - row;
+        if (row >= 0 && row < 8 && col >= 0 && col < 12){
+            grid[row][col] = {w, name}; //@ each grid, has weight and name
         }
     });
     
@@ -91,5 +71,5 @@ function processData(manifestText){
 //info[2] = "string"
 
 
-export {Problem, processData}
+export {Problem, Node, processData}
 

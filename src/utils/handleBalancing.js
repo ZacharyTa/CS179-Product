@@ -1,6 +1,6 @@
 // logic for handling the A* search algo smth
 
-import {Problem, processData} from './problem.js'
+import {Problem, Node, processData} from './problem.js'
 import {priorityQueue} from './priority.js'
 
 /**
@@ -13,6 +13,9 @@ import {priorityQueue} from './priority.js'
  * costs:
  *  within buffer and ship: 1 min per cell
  * transfer betw them: 4
+ * 
+ * index--> first cell is (1,1) (not 0,0)
+ * bufferzone: reflect over x axis, EX: most right bottom corner" (1,1)
  */
 
 
@@ -58,7 +61,7 @@ function validateMoves(grid, row, col){ //coordinate of container
     var moves = []; //store starting and ending locations
 
     for(var j = 0; j < grid[0].length; j++){      //start at container location
-        for(var i = grid.length-1; i >= 0; i--){
+        for(var i =0; i < grid.length; i++){
             if(grid[i][j].name === "UNUSED" && j !== col){
 
                 var t = Math.abs(row-i) + Math.abs(col-j);
@@ -85,7 +88,7 @@ function getMoves(ship){
         for(var j = 0; j < ship[i].length; j++){
 
             if(ship[i][j].name !== "NAN" && ship[i][j].name !== "UNUSED" ){
-                var no_containerTop = i === 0 || ship[i-1][j].name === "UNUSED";
+                var no_containerTop = i === ship.length - 1 || ship[i+1][j].name === "UNUSED";
                 if(no_containerTop){
                     allMoves.push({
                         moves: validateMoves(ship, i, j),
@@ -119,23 +122,30 @@ export default function handleBalancing(manifestText) { //A* search
 
     // Note: right now, all this does is return the list of random operations
 
+    var buffer = Array.from({length: 4}, ()=> new Array(24).fill("UNUSED"));
 
 
     //process manifestText
     var ship = processData(manifestText); //returns an 8x12 grid 
-    console.log(ship)
+    // console.log(ship)
 
     var weights = calc_weights(ship); //199 , 0
     console.log(weights); 
 
     
     //test valid moves
-    var allMoves = getMoves(ship);
+    // var allMoves = getMoves(ship);
 
-    console.log("allMoves size: ", allMoves.length)
-    console.log(allMoves.length);
-    console.log(allMoves[0])
-    console.log(allMoves[1])
+    // console.log("allMoves size: ", allMoves.length)
+    // console.log(allMoves.length);
+    // console.log(allMoves[0])
+    // console.log(allMoves[1])
+
+
+    var p = new Problem(ship, buffer, 0);
+    console.log("ship: ", p.grid);
+    console.log("buffer:", p.buffer);
+    console.log("time: ", p.time);
 
 
     // var time = 0;

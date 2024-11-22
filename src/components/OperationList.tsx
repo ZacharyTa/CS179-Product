@@ -61,10 +61,6 @@ const OperationList: React.FC<OperationListProps> = ({
     setIsFinishModalOpen(true);
   };
 
-  const handleCloseFinishModal = () => {
-    setIsFinishModalOpen(false);
-  };
-
   useEffect(() => {
     const currentCard = cardRef.current[currentIndex];
     if (currentCard) {
@@ -139,7 +135,6 @@ const OperationList: React.FC<OperationListProps> = ({
         title="Cargo Loading Complete"
         body="Please make sure to download and sent Manifest Outbound to captain before closing."
         isOpen={isFinishModalOpen}
-        onClose={handleCloseFinishModal}
         onDownload={handleDownload}
         onDone={handleDone}
       />

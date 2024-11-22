@@ -9,7 +9,7 @@ interface ManifestUploadProps {
 const ManifestUpload: React.FC<ManifestUploadProps> = ({
   onManifestUpload,
 }) => {
-  const [manifestText, setManifestText] = useState<string>("");
+  const [manifestText, setManifestText] = useState<string>("Manifest.txt");
 
   const handleFileChange = async (
     event: React.ChangeEvent<HTMLInputElement>,
@@ -30,6 +30,7 @@ const ManifestUpload: React.FC<ManifestUploadProps> = ({
         </div>
         <input
           type="file"
+          placeholder={manifestText}
           accept=".txt"
           className="file-input file-input-bordered file-input-primary text-base-content file-input-sm w-full max-w-xs"
           onChange={handleFileChange}

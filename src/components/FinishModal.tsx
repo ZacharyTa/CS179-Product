@@ -4,7 +4,6 @@ interface FinishModalProps {
   title: string;
   body: string;
   isOpen: boolean;
-  onClose: () => void;
   onDownload: () => void;
   onDone: () => void;
 }
@@ -13,7 +12,6 @@ const FinishModal: React.FC<FinishModalProps> = ({
   title,
   body,
   isOpen,
-  onClose,
   onDownload,
   onDone,
 }) => {

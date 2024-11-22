@@ -22,7 +22,7 @@ const OperationCard: React.FC<OperationCardProps> = ({
     let manifestText = getManifestData();
 
     // apply operation on manifes data
-    manifestText = applyOperationToManifest(manifestText, operation);
+    manifestText = applyOperationToManifest(manifestText, operation)!;
 
     // save new manifest data to cookies
     setManifestData(manifestText);

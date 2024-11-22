@@ -3,19 +3,20 @@ import React, { useState, useEffect } from "react";
 import Layout from "@/components/Layout";
 import ShipGrid from "@/components/ShipGrid";
 import useManifestData from "@/hooks/useManifestData";
-import SignInButton from "@/components/SigninButton";
-import MessageModal from "@/components/MessageModal";
+// import SignInButton from "@/components/SigninButton";
+// import MessageModal from "@/components/MessageModal";
 import Cookies from "js-cookie";
 import OperationList from "@/components/OperationList";
+import { getOperations, setOperations } from "@/utils/operationCookies";
 import { OutputLoadOperation } from "@/lib/types";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 
 export default function BalancePage() {
   const [manifestText, setManifestText] = useState<string>("");
-  const [isMessageModalOpen, setIsMessageModalOpen] = useState<boolean>(false);
-  const [isCargoLoadModalOpen, setIsCargoLoadModalOpen] =
-    useState<boolean>(false);
-  const operations: OutputLoadOperation[] = [
+  // const [isMessageModalOpen, setIsMessageModalOpen] = useState<boolean>(false);
+  // const [isCargoLoadModalOpen, setIsCargoLoadModalOpen] =
+  useState<boolean>(false);
+  const [operations, setOperationsState] = useState<OutputLoadOperation[]>([
     {
       type: "move",
       name: "Ram",
@@ -53,29 +54,39 @@ export default function BalancePage() {
       newColumn: 1,
     },
     // Add more operations as needed
-  ];
+  ]);
 
+  // onmount load manifestText and operations
   useEffect(() => {
     const savedManifestText = Cookies.get("manifestText");
     if (savedManifestText) {
       setManifestText(savedManifestText);
     }
+    const savedOperations = getOperations();
+    if (savedOperations.length > 0) {
+      setOperationsState(savedOperations);
+    }
   }, []);
 
   const manifestData = useManifestData(manifestText);
 
+  useEffect(() => {
+    // saved changed operations to cookies (future use when we grab the list of operations from handleBalancing)
+    setOperations(operations);
+    setOperationsState(operations);
+  }, [operations]);
+
   const updateManifestText = (newManifestText: string) => {
-    console.log("SDASDASD");
     setManifestText(newManifestText);
   };
 
-  const handleOpenMessageModal = () => {
-    setIsMessageModalOpen(true);
-  };
+  // const handleOpenMessageModal = () => {
+  //   setIsMessageModalOpen(true);
+  // };
 
-  const handleCloseMessageModal = () => {
-    setIsMessageModalOpen(false);
-  };
+  // const handleCloseMessageModal = () => {
+  //   setIsMessageModalOpen(false);
+  // };
 
   return (
     <Layout

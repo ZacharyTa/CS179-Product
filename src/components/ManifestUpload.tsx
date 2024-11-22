@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import Cookies from "js-cookie";
 
 interface ManifestUploadProps {
   onManifestUpload: (manifestText: string) => void; // Pass this to parent component
@@ -11,13 +12,14 @@ const ManifestUpload: React.FC<ManifestUploadProps> = ({
   const [manifestText, setManifestText] = useState<string>("");
 
   const handleFileChange = async (
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     if (event.target.files && event.target.files[0]) {
       const file = event.target.files[0];
       const text = await file.text();
       setManifestText(text);
       onManifestUpload(text);
+      Cookies.set("manifestFileName", file.name);
     }
   };
   return (

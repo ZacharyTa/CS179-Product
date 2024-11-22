@@ -39,10 +39,10 @@ const ShipGrid: React.FC<ShipGridProps> = ({
                   ? selectedGridSlots.has(index)
                     ? "bg-success"
                     : slot.item === "UNUSED"
-                    ? "bg-secondary/50"
-                    : slot.item === "NAN"
-                    ? "bg-black text-white"
-                    : "bg-base-300 text-base-content"
+                      ? "bg-secondary/50"
+                      : slot.item === "NAN"
+                        ? "bg-black text-white"
+                        : "bg-base-300 text-base-content"
                   : "bg-white"
               } hover:opacity-70`}
               onClick={() => slot?.item !== "NAN" && selectGridSlot(index)}

@@ -3,9 +3,11 @@ import React from "react";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
 import ManifestUpload from "@/components/ManifestUpload";
+import { removeAllCookies } from "@/utils/removeAllCookies";
 
 export default function UploadPage() {
   const router = useRouter();
+  removeAllCookies();
 
   const handleManifestUpload = (manifestText: string) => {
     const savedManifestText = Cookies.set("manifestText", manifestText);

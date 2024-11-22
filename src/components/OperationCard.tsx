@@ -1,11 +1,13 @@
 // OperationCard.tsx
 import React from "react";
 import { OutputLoadOperation } from "@/lib/types";
+import { getManifestData, setManifestData } from "@/utils/manifestCookies";
+import applyOperationToManifest from "@/utils/manifestOperations";
 
 interface OperationCardProps {
   operation: OutputLoadOperation;
   showNextButton?: boolean;
-  onNext?: () => void;
+  onNext: (newManifestText: string) => void;
 }
 
 const OperationCard: React.FC<OperationCardProps> = ({
@@ -14,6 +16,20 @@ const OperationCard: React.FC<OperationCardProps> = ({
   onNext,
 }) => {
   const { type, name, oldRow, oldColumn, newRow, newColumn } = operation;
+
+  const handleNext = () => {
+    //get current manifest data
+    let manifestText = getManifestData();
+
+    // apply operation on manifes data
+    manifestText = applyOperationToManifest(manifestText, operation);
+
+    // save new manifest data to cookies
+    setManifestData(manifestText);
+
+    // move to next operation card
+    onNext(manifestText);
+  };
 
   return (
     <div className="card w-full bg-base-100 shadow-md">
@@ -30,7 +46,7 @@ const OperationCard: React.FC<OperationCardProps> = ({
         </p>
         {showNextButton && (
           <div className="card-actions justify-end">
-            <button className="btn btn-primary" onClick={onNext}>
+            <button className="btn btn-primary" onClick={handleNext}>
               Next
             </button>
           </div>

@@ -64,6 +64,11 @@ export default function BalancePage() {
 
   const manifestData = useManifestData(manifestText);
 
+  const updateManifestText = (newManifestText: string) => {
+    console.log("SDASDASD");
+    setManifestText(newManifestText);
+  };
+
   const handleOpenMessageModal = () => {
     setIsMessageModalOpen(true);
   };
@@ -73,7 +78,14 @@ export default function BalancePage() {
   };
 
   return (
-    <Layout sidebar={<OperationList operations={operations} />}>
+    <Layout
+      sidebar={
+        <OperationList
+          operations={operations}
+          updateManifestText={updateManifestText}
+        />
+      }
+    >
       <TransformWrapper limitToBounds={false} minScale={0.5} maxScale={1}>
         <TransformComponent>
           <div className="h-full outline outline-red-500">

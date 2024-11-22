@@ -2,18 +2,30 @@
 import React, { useState, useEffect, useRef } from "react";
 import OperationCard from "./OperationCard";
 import { OutputLoadOperation } from "@/lib/types";
+import { getManifestData } from "@/utils/manifestCookies";
+import {
+  getCurrentOperationIndex,
+  setCurrentOperationIndex,
+} from "@/utils/operationCookies";
 
 interface OperationListProps {
   operations: OutputLoadOperation[];
+  updateManifestText: (newManifestText: string) => void;
 }
 
-const OperationList: React.FC<OperationListProps> = ({ operations }) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
+const OperationList: React.FC<OperationListProps> = ({
+  operations,
+  updateManifestText,
+}) => {
+  const [currentIndex, setCurrentIndex] = useState(getCurrentOperationIndex());
   const cardRef = useRef<(HTMLDivElement | null)[]>([]);
 
-  const handleNext = () => {
+  const handleNext = (newManifestText: string) => {
     if (currentIndex < operations.length - 1) {
+      const newIndex = currentIndex + 1;
       setCurrentIndex(currentIndex + 1);
+      setCurrentOperationIndex(newIndex);
+      updateManifestText(newManifestText);
     }
   };
 
@@ -60,7 +72,7 @@ const OperationList: React.FC<OperationListProps> = ({ operations }) => {
           <OperationCard
             operation={operation}
             showNextButton={index === currentIndex}
-            onNext={handleNext}
+            onNext={(newManifestText: string) => handleNext(newManifestText)}
           />
         </div>
       ))}

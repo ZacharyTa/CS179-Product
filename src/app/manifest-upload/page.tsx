@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
 import ManifestUpload from "@/components/ManifestUpload";
 import { removeAllCookies } from "@/utils/removeAllCookies";
+import bufferEmpty from "@/data/buffer";
 
 export default function UploadPage() {
   const router = useRouter();
@@ -11,6 +12,7 @@ export default function UploadPage() {
 
   const handleManifestUpload = (manifestText: string) => {
     const savedManifestText = Cookies.set("manifestText", manifestText);
+    Cookies.set("bufferText", bufferEmpty.trim());
     if (savedManifestText) {
       router.push("/selection");
     }

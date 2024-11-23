@@ -19,7 +19,7 @@ export interface InputOperation {
 
 //[{type, name, time, oldRow, oldColumn, newRow, newColumn}, ...]
 export interface OutputLoadOperation {
-  type: "offload" | "onload" | "move";
+  type: "offload" | "onload" | "move" | "buffer";
   name: string;
   time: number;
   oldRow: number;

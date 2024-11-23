@@ -5,5 +5,5 @@ export function removeAllCookies(): void {
   Cookies.remove("operations");
   Cookies.remove("currentOperationIndex");
   Cookies.remove("manifestFileName");
-  
+  Cookies.remove("bufferText");
 }

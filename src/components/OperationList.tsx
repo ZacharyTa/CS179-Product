@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from "react";
 import OperationCard from "./OperationCard";
 import { OutputLoadOperation } from "@/lib/types";
 import { getManifestData, getManifestFileName } from "@/utils/manifestCookies";
+import { getBufferData } from "@/utils/bufferCookies";
 import {
   getCurrentOperationIndex,
   setCurrentOperationIndex,
@@ -14,23 +15,26 @@ import { useRouter } from "next/navigation";
 interface OperationListProps {
   operations: OutputLoadOperation[];
   updateManifestText: (newManifestText: string) => void;
+  updateBufferText: (newBufferText: string) => void;
 }
 
 const OperationList: React.FC<OperationListProps> = ({
   operations,
   updateManifestText,
+  updateBufferText,
 }) => {
   const [currentIndex, setCurrentIndex] = useState(getCurrentOperationIndex());
   const cardRef = useRef<(HTMLDivElement | null)[]>([]);
   const [isFinishModalOpen, setIsFinishModalOpen] = useState(false);
   const router = useRouter();
 
-  const handleNext = (newManifestText: string) => {
+  const handleNext = () => {
     if (currentIndex < operations.length) {
       const newIndex = currentIndex + 1;
       setCurrentIndex(currentIndex + 1);
       setCurrentOperationIndex(newIndex);
-      updateManifestText(newManifestText);
+      updateManifestText(getManifestData());
+      updateBufferText(getBufferData());
     }
   };
 
@@ -104,7 +108,7 @@ const OperationList: React.FC<OperationListProps> = ({
           <OperationCard
             operation={operation}
             showNextButton={index === currentIndex}
-            onNext={(newManifestText: string) => handleNext(newManifestText)}
+            onNext={() => handleNext()}
           />
         </div>
       ))}

@@ -2,12 +2,12 @@
 import React from "react";
 import { OutputLoadOperation } from "@/lib/types";
 import { getManifestData, setManifestData } from "@/utils/manifestCookies";
-import applyOperationToManifest from "@/utils/manifestOperations";
+import applyOperation from "@/utils/manifestOperations";
 
 interface OperationCardProps {
   operation: OutputLoadOperation;
   showNextButton?: boolean;
-  onNext: (newManifestText: string) => void;
+  onNext: () => void;
 }
 
 const OperationCard: React.FC<OperationCardProps> = ({
@@ -18,17 +18,11 @@ const OperationCard: React.FC<OperationCardProps> = ({
   const { type, name, oldRow, oldColumn, newRow, newColumn } = operation;
 
   const handleNext = () => {
-    //get current manifest data
-    let manifestText = getManifestData();
-
-    // apply operation on manifes data
-    manifestText = applyOperationToManifest(manifestText, operation)!;
-
-    // save new manifest data to cookies
-    setManifestData(manifestText);
+    // apply operation on manifest/buffer data
+    applyOperation(operation)!;
 
     // move to next operation card
-    onNext(manifestText);
+    onNext();
   };
 
   return (

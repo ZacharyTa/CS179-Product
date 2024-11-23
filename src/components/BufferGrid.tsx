@@ -2,13 +2,13 @@
 import { Container } from "@/lib/types";
 import { useGridData } from "@/hooks/useGridData";
 
-interface ShipGridProps {
+interface BufferGridProps {
   containers?: Container[];
   columns: number;
   rows: number;
 }
 
-const ShipGrid: React.FC<ShipGridProps> = ({
+const BufferGrid: React.FC<BufferGridProps> = ({
   containers = [],
   columns,
   rows,
@@ -27,7 +27,7 @@ const ShipGrid: React.FC<ShipGridProps> = ({
           gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
           gridTemplateRows: `repeat(${rows}, minmax(0, 1fr))`,
         }}
-        dir="rtl"
+        dir="ltr"
       >
         {gridSlots &&
           gridSlots?.map((slot, index) => (
@@ -54,4 +54,4 @@ const ShipGrid: React.FC<ShipGridProps> = ({
   );
 };
 
-export default ShipGrid;
+export default BufferGrid;

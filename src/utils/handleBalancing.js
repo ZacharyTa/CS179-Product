@@ -102,13 +102,13 @@ function heuristic(problem){
     var moves = getMoves(problem.grid); //getting all the moves needed
     var minCost = Number.MAX_SAFE_INTEGER;
 
-    for(var move of allMoves){
+    for(var move of moves){
         for(const m of move.moves){
             //get weight
-            var g = problem.getNewGrid(problem.grid, move);
+            var g = problem.getNewGrid(problem.grid, m);
             var weights = calc_weights(g);
             var balanceCost = Math.abs(weights.left_weight - weights.right_weight);
-            var totalCost = move.time + balanceCost;
+            var totalCost = m.time + balanceCost;
             if(totalCost < minCost){ minCost = totalCost}
         }
     }
@@ -128,7 +128,7 @@ function setMove(grid, move){
 export default function handleBalancing(manifestText) { //A* search
 
     var frontier = new priorityQueue();         //frontier for A*
-    var visited = new Map();                    //keep track of visited nodes
+    var visited = new Set();                    //keep track of visited nodes
     const optimalOperations = [];   //returns the optimal solution (based on time)
     var solutionPath = [];
 
@@ -137,57 +137,51 @@ export default function handleBalancing(manifestText) { //A* search
 
     var ship = processData(manifestText); // ship grid; returns an 8x12 grid
     var p = new Problem(ship); 
-    var root = new Node(p,null, null, 0);       // root of tree
+    var root = new Node(p, null, null, 0); 
     frontier.enqueue(root, 0);
 
-    console.log(frontier)
-
-    var currNode = frontier.dequeue();
-    console.log("currNode:", currNode);  // Check the node dequeued
-
-    console.log("currNode grid:", currNode.problem.grid)
     
 
     while(!frontier.isEmpty()){
 
-        break;
+        var currNode = frontier.dequeue(); 
 
-        // var currNode = frontier.dequeue(); 
-
-        // console.log(currNode.problem.grid);
+        console.log(currNode.problem.grid);
     
-        // //check for goal 
-        //var weights = calc_weights(currNode.problem.grid);
-        // console.log(weights)
+        //check for goal 
+        var weights = calc_weights(currNode.problem.grid);
+        console.log(weights)
 
-        // if (checkBalance(weights)) {
+        if (checkBalance(weights)) {
 
-        //     // return currentNode.getPath(); // Return the optimal path
-        //     //need to add "move" for type 
-        //     solutionPath = currNode.getPath();
+            // return currentNode.getPath(); // Return the optimal path
+            //need to add "move" for type 
+            solutionPath = currNode.getPath();
+            break;
             
-        // }
+        }
         
-        // //need to serialize first since complex data for visited map!!!
-        // var gridSerial =JSON.stringify(currNode.problem.grid)
-        // if(!visited.has(gridSerial)){
-        //     visited.add(gridSerial);
+        //need to serialize first since complex data for visited map!!!
+        var gridSerial =JSON.stringify(currNode.problem.grid)
+        if(!visited.has(gridSerial)){
+            visited.add(gridSerial);
 
-        //     //get possible moves
-        //     var moves = getMoves(currNode.problem.grid)
+            //get possible moves
+            var moves = getMoves(currNode.problem.grid)
 
-        //     for(var m of moves){
-        //         for( var i of m.moves){
+            for(var m of moves){
+                for( var i of m.moves){
 
-        //             var newGrid = currNode.problem.grid.getNewGrid(currNode.grid, i);
-        //             var newCost = currNode.cost + i.time;
-        //             var child = new Node(newGrid, currNode, i, newCost);
+                    var newGrid = currNode.problem.getNewGrid(currNode.problem.grid, i);
+                    var newP = new Problem(newGrid)
+                    var newCost = currNode.cost + i.time;
+                    var child = new Node(newP, currNode, i, newCost);
 
-        //             frontier.enqueue(child.grid, currNode.cost + heuristic(currNode.grid));
+                    frontier.enqueue(child, currNode.cost + heuristic(newP));
 
-        //         }
-        //     }
-        // }
+                }
+            }
+        }
     }
 
 

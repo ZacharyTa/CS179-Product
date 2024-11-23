@@ -25,11 +25,14 @@ class priorityQueue{
         if(!flag){
             this.values.push({node, priority});
         }
+        // this.values.push({ node, priority });
+        // this.values.sort((a, b) => a.priority - b.priority); 
     }
 
     //remove from priority queue
     dequeue(){
-        return this.values.shift();
+        const item = this.values.shift();  // Removes the first element
+        return item ? item.node : undefined;
     }
 
 

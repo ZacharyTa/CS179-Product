@@ -2,44 +2,67 @@
 //class to represent Problem states (tree structure)
 class Problem{
     
-    constructor(ship,buffer, time){         //current state
+    // constructor(ship, buffer){
+    constructor(ship){        
         this.grid = ship;
-        this.buffer = buffer; 
-        this.time = time;
+        //this.buffer = buffer; //might remove this, not sure yet, if so will also delete setBuffer() & bufferEmpty()
+        // this.time = time; this will be stored with Node instead
     }
 
-    setTime(time) { this.time = time;}
+    // setTime(time) { this.time = time;}
     getGrid(){return this.grid;}
     getTime(){return this.time;}
 
-    //after getting the optimal move (based on time), changes location of the container to the wanted location
-    setGrid(newX, newY, name){
-        //something like:
-        /**
-         * at ship[newx][newy] = name (one container at a time)
-         */
+    //function to return a grid with a new move; 
+    getNewGrid(grid, move){
+        var newGrid = grid.map(row =>row.map(cell => ({...cell})));
+
+        var container = newGrid[move.oldRow][move.oldColumn];
+        newGrid[move.oldRow][move.oldColumn] = {name: "UNUSED", w: 0}; //old spot should now be unused
+        newGrid[move.newRow][move.newColumn]= container;
+
+        return (newGrid);
+
     }
 
-    setBuffer(nex, newY, name){}
+    //functions specifically for balancing, I wrote them in handleBalancing
 
+    //if needed
+    // setGrid(grid){
+    //     this.grid = grid;
+    // }
+
+
+
+
+    setBuffer(nex, newY, name){}
     bufferEmpty(){}; //returns true if nothing is in the buffer
 }
 
 
 //Node structure 
-// class Node{
-//     constructor(state, parent = null, solution, time){
-//         this.state = state;
-//         this.parent = parent;
-//         this.solution = solution;
-//         this.time = time;
-//     }
+class Node{
+
+    constructor(problem, parent, move, cost){
+        this.problem = problem;         //the grid
+        this.parent = parent; 
+        this.move = move,
+        this.cost = cost;
+    }
 
 
+    path(){
+        const path = [];
+        var currNode = this;
+        while (currNode.parent != null){
+            path.unshift(currNode.move) //adding to path
+            currNode = currNode.parent;
+        }
 
-// }
+        return path;
+    }
 
-
+}
 
 
 

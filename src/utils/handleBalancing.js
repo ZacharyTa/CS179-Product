@@ -4,10 +4,9 @@ import {Problem, Node, processData} from './problem.js'
 import {priorityQueue} from './priority.js'
 
 /**
- * Need to:
+ * To do:
  * 2) define possible moves
- * 3) compute manhattan dist h function
- * 5) return solution (based on optimal time)
+ * 6) SIFT function (when balance not possible, and need to move all containers to buffer zone)
  * 
  * 
  * costs:
@@ -18,19 +17,17 @@ import {priorityQueue} from './priority.js'
  * bufferzone: reflect over x axis, EX: most right bottom corner" (1,1)
  */
 
-
-
 //calculate weights, and return them
-function calc_weights(ship){
+function calc_weights(grid){
     var left_weight = 0;
     var right_weight = 0;
 
-    for (var i = 0; i < ship.length; i++){
-        for(var j= 0; j < ship[i].length; j++){
-            if (ship[i][j].name !== "NAN" && ship[i][j].name !== "UNUSED"){
+    for (var i = 0; i < grid.length; i++){
+        for(var j= 0; j < grid[i].length; j++){
+            if (grid[i][j].name !== "NAN" && grid[i][j].name !== "UNUSED"){
                 //compute left weights
-                if (j < 6) left_weight += ship[i][j].w;
-                else right_weight += ship[i][j].w;
+                if (j < 6) left_weight += grid[i][j].w;
+                else right_weight += grid[i][j].w;
             }
         }
     }
@@ -49,23 +46,20 @@ function checkBalance(weights){
 }
 
 
-// //calcs ManhattanDistance from (row, col) to (i, j)
-// function calcDist(row, col, i, j, ship){
-
-// }
-
 
 //simply returns valid moves for 1 container
 function validateMoves(grid, row, col){ //coordinate of container
     
     var moves = []; //store starting and ending locations
 
-    for(var j = 0; j < grid[0].length; j++){      //start at container location
+    for(var j = 0; j < grid[0].length; j++){     
         for(var i =0; i < grid.length; i++){
             if(grid[i][j].name === "UNUSED" && j !== col){
 
                 var t = Math.abs(row-i) + Math.abs(col-j);
                 moves.push({
+                    type: "move",
+                    name: grid[i][j].name,
                     oldRow: row,
                     oldColumn: col,
                     newRow: i,
@@ -81,18 +75,18 @@ function validateMoves(grid, row, col){ //coordinate of container
 
 }
 
-
-function getMoves(ship){
+//using validateMoves, returns all moves for all containers (in 1 grid)
+function getMoves(grid){
     var allMoves = [];
-    for(var i = 0; i < ship.length; i++){
-        for(var j = 0; j < ship[i].length; j++){
+    for(var i = 0; i < grid.length; i++){
+        for(var j = 0; j < grid[i].length; j++){
 
-            if(ship[i][j].name !== "NAN" && ship[i][j].name !== "UNUSED" ){
-                var no_containerTop = i === ship.length - 1 || ship[i+1][j].name === "UNUSED";
+            if(grid[i][j].name !== "NAN" && grid[i][j].name !== "UNUSED" ){
+                var no_containerTop = i === grid.length - 1 || grid[i+1][j].name === "UNUSED";
                 if(no_containerTop){
                     allMoves.push({
-                        moves: validateMoves(ship, i, j),
-                        container_name: ship[i][j].name
+                        moves: validateMoves(grid, i, j),
+                        container_name: grid[i][j].name
                     })
                 }
             }
@@ -103,80 +97,123 @@ function getMoves(ship){
 
 }
 
-//heuristic  --> Manhattan
-function manhattan_heuristic(problem){
+//heuristic  --> estimate min time to from current state to balance ship
+function heuristic(problem){
+    var moves = getMoves(problem.grid); //getting all the moves needed
+    var minCost = Number.MAX_SAFE_INTEGER;
 
+    for(var move of allMoves){
+        for(const m of move.moves){
+            //get weight
+            var g = problem.getNewGrid(problem.grid, move);
+            var weights = calc_weights(g);
+            var balanceCost = Math.abs(weights.left_weight - weights.right_weight);
+            var totalCost = move.time + balanceCost;
+            if(totalCost < minCost){ minCost = totalCost}
+        }
+    }
+    return minCost;
 }
 
+
+function setMove(grid, move){
+    var newGrid = grid.map(row =>row.map(cell => ({...cell})));
+}
+
+
+//f(n) = g(n) + h(n);
+//g(n) -> current time
+//h(n) -> estimated cost of time to reach goal 
 
 export default function handleBalancing(manifestText) { //A* search
-    const optimalOperations = [
-        {name: "Ram", time: 4, oldRow: 1, oldColumn: 4, newRow: 1, newColumn: 8},
-        {name: "Cat", time: 1, oldRow: 1, oldColumn: 4, newRow: 2, newColumn: 4},
-        {name: "Dog", time: 2, oldRow: 1, oldColumn: 4, newRow: 2, newColumn: 5},
-    ];
+
+    var frontier = new priorityQueue();         //frontier for A*
+    var visited = new Map();                    //keep track of visited nodes
+    const optimalOperations = [];   //returns the optimal solution (based on time)
+    var solutionPath = [];
+
+    var buffer = Array.from({length: 4}, ()=> new Array(24).fill("UNUSED")); //buffer space
 
 
-    //PRIORITY QUEUE (need to make since not in js) ---> frontier[]
-    //visited (map to store visited)
+    var ship = processData(manifestText); // ship grid; returns an 8x12 grid
+    var p = new Problem(ship); 
+    var root = new Node(p,null, null, 0);       // root of tree
+    frontier.enqueue(root, 0);
 
-    // Note: right now, all this does is return the list of random operations
+    console.log(frontier)
 
-    var buffer = Array.from({length: 4}, ()=> new Array(24).fill("UNUSED"));
+    var currNode = frontier.dequeue();
+    console.log("currNode:", currNode);  // Check the node dequeued
 
-
-    //process manifestText
-    var ship = processData(manifestText); //returns an 8x12 grid 
-    // console.log(ship)
-
-    var weights = calc_weights(ship); //199 , 0
-    console.log(weights); 
-
-    
-    //test valid moves
-    // var allMoves = getMoves(ship);
-
-    // console.log("allMoves size: ", allMoves.length)
-    // console.log(allMoves.length);
-    // console.log(allMoves[0])
-    // console.log(allMoves[1])
-
-
-    var p = new Problem(ship, buffer, 0);
-    console.log("ship: ", p.grid);
-    console.log("buffer:", p.buffer);
-    console.log("time: ", p.time);
-
-
-    // var time = 0;
-
-    // //set initial problem state---> root
-    // var problem = new Problem(ship, time); 
-    // var frontier = new priorityQueue();         //frontier for A*
-    // var visited = new Map();                    //keep track of visited nodes
-
-    // frontier.enqueue(problem, time);
-
-    // while(!frontier.isEmpty()){
-    //     //compute!
-    //     break; //place holder for now
-    // }
-
+    console.log("currNode grid:", currNode.problem.grid)
     
 
+    while(!frontier.isEmpty()){
+
+        break;
+
+        // var currNode = frontier.dequeue(); 
+
+        // console.log(currNode.problem.grid);
+    
+        // //check for goal 
+        //var weights = calc_weights(currNode.problem.grid);
+        // console.log(weights)
+
+        // if (checkBalance(weights)) {
+
+        //     // return currentNode.getPath(); // Return the optimal path
+        //     //need to add "move" for type 
+        //     solutionPath = currNode.getPath();
+            
+        // }
+        
+        // //need to serialize first since complex data for visited map!!!
+        // var gridSerial =JSON.stringify(currNode.problem.grid)
+        // if(!visited.has(gridSerial)){
+        //     visited.add(gridSerial);
+
+        //     //get possible moves
+        //     var moves = getMoves(currNode.problem.grid)
+
+        //     for(var m of moves){
+        //         for( var i of m.moves){
+
+        //             var newGrid = currNode.problem.grid.getNewGrid(currNode.grid, i);
+        //             var newCost = currNode.cost + i.time;
+        //             var child = new Node(newGrid, currNode, i, newCost);
+
+        //             frontier.enqueue(child.grid, currNode.cost + heuristic(currNode.grid));
+
+        //         }
+        //     }
+        // }
+    }
 
 
+    //Will, check here if solutionPath is null to check if SIFT needs to be used
+    //if there is no solution, solutionPath = null after exiting while loop
+    console.log(solutionPath);
 
-    // --------------------------------------------------
+    if(solutionPath !== null){
+        //process results ---> add type: move && shift results (no 0 indexing)
 
-   // Return requirements:
-    // List of operations the user should perform in order (each operation should have an estimated execution time in minutes)
-    // Data format:
-    // [{type, name, time, oldRow, oldColumn, newRow, newColumn}, ...]
-    // [...
-    // {type: "move", name: "Ram", time: 4, oldRow: 1, oldColumn: 4, newRow: 1, newColumn: 8},
-    // {type: "move", name: "Cat", time: 1, oldRow: 1, oldColumn: 4, newRow: 2, newColumn: 4},
-    // {type: "move", name: "Dog", time: 2, oldRow: 1, oldColumn: 4, newRow: 2, newColumn: 5},
-    // ....]
+    }
+    
+
     return optimalOperations;
 }
+
+
+
+
+
+// Return requirements:
+// List of operations the user should perform in order (each operation should have an estimated execution time in minutes)
+// Data format:
+// [{type, name, time, oldRow, oldColumn, newRow, newColumn}, ...]
+// [...
+// {type: "move", name: "Ram", time: 4, oldRow: 1, oldColumn: 4, newRow: 1, newColumn: 8},
+// {type: "move", name: "Cat", time: 1, oldRow: 1, oldColumn: 4, newRow: 2, newColumn: 4},
+// {type: "move", name: "Dog", time: 2, oldRow: 1, oldColumn: 4, newRow: 2, newColumn: 5},
+// ....]

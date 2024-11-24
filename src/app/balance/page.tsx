@@ -5,8 +5,6 @@ import ShipGrid from "@/components/ShipGrid";
 import BufferGrid from "@/components/BufferGrid";
 import useManifestData from "@/hooks/useManifestData";
 import useBufferData from "@/hooks/useBufferData";
-// import SignInButton from "@/components/SigninButton";
-// import MessageModal from "@/components/MessageModal";
 import OperationList from "@/components/OperationList";
 import { getOperations, setOperations } from "@/utils/operationCookies";
 import { getBufferData } from "@/utils/bufferCookies";
@@ -17,75 +15,7 @@ import { getManifestData } from "@/utils/manifestCookies";
 export default function BalancePage() {
   const [manifestText, setManifestText] = useState<string>("");
   const [bufferText, setBufferText] = useState<string>(""); // TODO: make these grab from cookies
-  // const [isMessageModalOpen, setIsMessageModalOpen] = useState<boolean>(false);
-  // const [isCargoLoadModalOpen, setIsCargoLoadModalOpen] =
-  useState<boolean>(false);
-  const [operations, setOperationsState] = useState<OutputLoadOperation[]>([
-    {
-      type: "move",
-      name: "Ram",
-      time: 3,
-      oldRow: 1,
-      oldColumn: 4,
-      newRow: 4,
-      newColumn: 1,
-    },
-    {
-      type: "move",
-      name: "Dog",
-      time: 3,
-      oldRow: 2,
-      oldColumn: 2,
-      newRow: 5,
-      newColumn: 1,
-    },
-    {
-      type: "offload",
-      name: "Owl",
-      time: 3,
-      oldRow: 1,
-      oldColumn: 9,
-      newRow: 0,
-      newColumn: 0,
-    },
-    {
-      type: "onload",
-      name: "Top",
-      time: 3,
-      oldRow: 0,
-      oldColumn: 0,
-      newRow: 6,
-      newColumn: 1,
-    },
-    {
-      type: "buffer",
-      name: "Top",
-      time: 3,
-      oldRow: 6,
-      oldColumn: 1,
-      newRow: 1,
-      newColumn: -1,
-    },
-    {
-      type: "buffer",
-      name: "Top",
-      time: 3,
-      oldRow: 1,
-      oldColumn: -1,
-      newRow: 1,
-      newColumn: -24,
-    },
-    {
-      type: "buffer",
-      name: "Top",
-      time: 3,
-      oldRow: 1,
-      oldColumn: -24,
-      newRow: 6,
-      newColumn: 1,
-    },
-    // Add more operations as needed
-  ]);
+  const [operations, setOperationsState] = useState<OutputLoadOperation[]>([]);
 
   // onmount load manifestText and operations
   useEffect(() => {
@@ -106,12 +36,6 @@ export default function BalancePage() {
   const manifestData = useManifestData(manifestText);
   const bufferData = useBufferData(bufferText);
 
-  useEffect(() => {
-    // saved changed operations to cookies (future use when we grab the list of operations from handleBalancing)
-    setOperations(operations);
-    setOperationsState(operations);
-  }, [operations]);
-
   const updateManifestText = (newManifestText: string) => {
     setManifestText(newManifestText);
   };
@@ -120,14 +44,6 @@ export default function BalancePage() {
     setBufferText(newBufferText);
   };
 
-  // const handleOpenMessageModal = () => {
-  //   setIsMessageModalOpen(true);
-  // };
-
-  // const handleCloseMessageModal = () => {
-  //   setIsMessageModalOpen(false);
-  // };
-
   return (
     <Layout
       sidebar={
@@ -135,6 +51,7 @@ export default function BalancePage() {
           operations={operations}
           updateManifestText={updateManifestText}
           updateBufferText={updateBufferText}
+          loading={false}
         />
       }
     >
@@ -148,6 +65,7 @@ export default function BalancePage() {
                     columns={manifestData.columns}
                     rows={manifestData.rows}
                     containers={manifestData.containers}
+                    loading={false}
                   />
                 )}
               </div>

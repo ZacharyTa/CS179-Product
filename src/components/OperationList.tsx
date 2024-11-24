@@ -15,13 +15,17 @@ import { useRouter } from "next/navigation";
 interface OperationListProps {
   operations: OutputLoadOperation[];
   updateManifestText: (newManifestText: string) => void;
-  updateBufferText: (newBufferText: string) => void;
+  updateBufferText?: (newBufferText: string) => void;
+  onRemoveOperation?: (operationName: string) => void;
+  loading: boolean;
 }
 
 const OperationList: React.FC<OperationListProps> = ({
   operations,
   updateManifestText,
   updateBufferText,
+  onRemoveOperation,
+  loading,
 }) => {
   const [currentIndex, setCurrentIndex] = useState(getCurrentOperationIndex());
   const cardRef = useRef<(HTMLDivElement | null)[]>([]);
@@ -34,7 +38,7 @@ const OperationList: React.FC<OperationListProps> = ({
       setCurrentIndex(currentIndex + 1);
       setCurrentOperationIndex(newIndex);
       updateManifestText(getManifestData());
-      updateBufferText(getBufferData());
+      if (updateBufferText) updateBufferText(getBufferData());
     }
   };
 
@@ -97,7 +101,7 @@ const OperationList: React.FC<OperationListProps> = ({
             cardRef.current[index] = element;
           }}
           className={`carousel-item w-full snap-center ${
-            index === currentIndex ? "opacity-100" : "opacity-50"
+            index === currentIndex || loading ? "opacity-100" : "opacity-50"
           }`}
           style={{
             display: "flex",
@@ -109,6 +113,10 @@ const OperationList: React.FC<OperationListProps> = ({
             operation={operation}
             showNextButton={index === currentIndex}
             onNext={() => handleNext()}
+            loading={loading}
+            onRemove={() =>
+              onRemoveOperation && onRemoveOperation(operation.name)
+            }
           />
         </div>
       ))}
@@ -128,7 +136,7 @@ const OperationList: React.FC<OperationListProps> = ({
         </div>
       )}
       {/* finished button */}
-      {currentIndex >= operations.length && (
+      {!loading && currentIndex >= operations.length && (
         <div className="flex justify-center mt-4">
           <button className="btn btn-primary" onClick={handleFinish}>
             Finish

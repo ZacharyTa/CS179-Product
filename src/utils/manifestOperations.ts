@@ -221,7 +221,7 @@ export default function applyOperation(
     const newEntry = {
       row: operation.newRow,
       col: operation.newColumn,
-      weight: 0, //TODO: WE dont know the weight yet, the user needs to input the weight (create new util helper like: "editWeight.ts")
+      weight: operation.weight ? operation.weight  : 0,
       item: operation.name,
       originalLine: `[${operation.newRow.toString().padStart(2, "0")},${operation.newColumn.toString().padStart(2, "0")}], {00000}, ${operation.name}`,
     };

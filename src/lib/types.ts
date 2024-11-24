@@ -26,4 +26,5 @@ export interface OutputLoadOperation {
   oldColumn: number;
   newRow: number;
   newColumn: number;
+  weight?: number;
 }

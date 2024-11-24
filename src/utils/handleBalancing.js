@@ -1,10 +1,69 @@
 // logic for handling the A* search algo smth
-
 export default function handleBalancing(manifestText) {
   const optimalOperations = [
-    { name: "Ram", time: 4, oldRow: 1, oldColumn: 4, newRow: 1, newColumn: 8 },
-    { name: "Cat", time: 1, oldRow: 1, oldColumn: 4, newRow: 2, newColumn: 4 },
-    { name: "Dog", time: 2, oldRow: 1, oldColumn: 4, newRow: 2, newColumn: 5 },
+    {
+      type: "move",
+      name: "Ram",
+      time: 3,
+      oldRow: 1,
+      oldColumn: 4,
+      newRow: 4,
+      newColumn: 1,
+    },
+    {
+      type: "move",
+      name: "Dog",
+      time: 3,
+      oldRow: 2,
+      oldColumn: 2,
+      newRow: 5,
+      newColumn: 1,
+    },
+    {
+      type: "offload",
+      name: "Owl",
+      time: 3,
+      oldRow: 1,
+      oldColumn: 9,
+      newRow: 0,
+      newColumn: 0,
+    },
+    {
+      type: "onload",
+      name: "Top",
+      time: 3,
+      oldRow: 0,
+      oldColumn: 0,
+      newRow: 6,
+      newColumn: 1,
+    },
+    {
+      type: "buffer",
+      name: "Top",
+      time: 3,
+      oldRow: 6,
+      oldColumn: 1,
+      newRow: 1,
+      newColumn: -1,
+    },
+    {
+      type: "buffer",
+      name: "Top",
+      time: 3,
+      oldRow: 1,
+      oldColumn: -1,
+      newRow: 1,
+      newColumn: -24,
+    },
+    {
+      type: "buffer",
+      name: "Top",
+      time: 3,
+      oldRow: 1,
+      oldColumn: -24,
+      newRow: 6,
+      newColumn: 1,
+    },
   ];
   // Note: right now, all this does is return the list of random operations
   // This function will handle loading/unloading the containers.

@@ -1,23 +1,53 @@
 "use client";
-import { Container } from "@/lib/types";
+import React, { useState, useEffect } from "react";
+import { Container, OutputLoadOperation } from "@/lib/types";
 import { useGridData } from "@/hooks/useGridData";
 
 interface ShipGridProps {
   containers?: Container[];
   columns: number;
   rows: number;
+  loading: boolean;
+  operations?: OutputLoadOperation[];
+  onSelectContainer?: (container: Container) => void;
 }
 
 const ShipGrid: React.FC<ShipGridProps> = ({
   containers = [],
   columns,
   rows,
+  loading,
+  operations,
+  onSelectContainer,
 }) => {
-  const { gridSlots, selectedGridSlots, selectGridSlot } = useGridData({
+  const { gridSlots, selectedGridSlots } = useGridData({
     containers,
     columns,
     rows,
   });
+
+  const [offloadSlots, setOffloadSlots] = useState<Set<number>>(new Set());
+
+  useEffect(() => {
+    const gridSize = columns * rows;
+    const slots = new Set<number>();
+
+    operations?.forEach((operation) => {
+      if (operation.type === "offload") {
+        const rowIndex = operation.oldRow - 1;
+        const colIndex = operation.oldColumn - 1;
+        const index = gridSize - (rowIndex * columns + colIndex) - 1;
+        slots.add(index);
+      }
+    });
+    setOffloadSlots(slots);
+  }, [operations, columns, rows]);
+
+  const handleSlotClick = (slot: Container | null, index: number) => {
+    if (loading && slot && slot.item !== "UNUSED" && slot.item !== "NAN") {
+      onSelectContainer && onSelectContainer(slot);
+    }
+  };
 
   return (
     <>
@@ -35,7 +65,7 @@ const ShipGrid: React.FC<ShipGridProps> = ({
               key={index}
               className={`flex items-center justify-center text-center border aspect-square text-[6px] ${
                 slot
-                  ? selectedGridSlots.has(index)
+                  ? offloadSlots.has(index)
                     ? "bg-success"
                     : slot.item === "UNUSED"
                       ? "bg-secondary/50"
@@ -44,7 +74,7 @@ const ShipGrid: React.FC<ShipGridProps> = ({
                         : "bg-base-300 text-base-content"
                   : "bg-white"
               } hover:opacity-70`}
-              onClick={() => slot?.item !== "NAN" && selectGridSlot(index)}
+              onClick={() => handleSlotClick(slot, index)}
             >
               <span className="truncate">{slot ? slot?.item : "Empty"}</span>
             </div>

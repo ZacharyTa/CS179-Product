@@ -1,9 +1,19 @@
 "use client";
 import React from "react";
 import { useRouter } from "next/navigation";
+import handleBalancing from "@/utils/handleBalancing";
+import { setOperations } from "@/utils/operationCookies";
 
 export default function SelectionPage() {
   const router = useRouter();
+
+  const handleBalance = () => {
+    const optimalOperations = handleBalancing();
+
+    setOperations(optimalOperations);
+
+    router.push("/balance");
+  };
 
   return (
     <div className="h-screen flex items-center justify-center text-4xl bg-base-100">
@@ -18,7 +28,7 @@ export default function SelectionPage() {
           </button>
           <button
             className="btn btn-secondary btn-outline btn-lg"
-            onClick={() => router.push("/balance")}
+            onClick={handleBalance}
           >
             Balance Ship
           </button>

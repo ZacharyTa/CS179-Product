@@ -4,17 +4,15 @@ import {Problem, Node, processData} from './problem.js'
 import {priorityQueue} from './priority.js'
 
 /**
- * To do:
- * 2) define possible moves
+ * TO DO:
  * 6) SIFT function (when balance not possible, and need to move all containers to buffer zone)
- * 
  * 
  * costs:
  *  within buffer and ship: 1 min per cell
  * transfer betw them: 4
  * 
  * index--> first cell is (1,1) (not 0,0)
- * bufferzone: reflect over x axis, EX: most right bottom corner" (1,1)
+ * bufferzone: reflect over x axis, EX: most right bottom corner" (1,-1)
  */
 
 //calculate weights, and return them
@@ -59,10 +57,10 @@ function validateMoves(grid, row, col){ //coordinate of container
                 var t = Math.abs(row-i) + Math.abs(col-j);
                 moves.push({
                     type: "move",
-                    name: grid[i][j].name,
-                    oldRow: row,
+                    name: grid[row][col].name,
+                    oldRow: row ,
                     oldColumn: col,
-                    newRow: i,
+                    newRow: i ,
                     newColumn:j,
                     time: t,
                 });
@@ -86,7 +84,6 @@ function getMoves(grid){
                 if(no_containerTop){
                     allMoves.push({
                         moves: validateMoves(grid, i, j),
-                        container_name: grid[i][j].name
                     })
                 }
             }
@@ -98,26 +95,27 @@ function getMoves(grid){
 }
 
 //heuristic  --> estimate min time to from current state to balance ship
-function heuristic(problem){
-    var moves = getMoves(problem.grid); //getting all the moves needed
-    var minCost = Number.MAX_SAFE_INTEGER;
+function heuristic(problem) {
+    const { left_weight, right_weight } = calc_weights(problem.grid);
+    const weightDifference = Math.abs(left_weight - right_weight); // Penalty for weight imbalance
 
-    for(var move of moves){
-        for(const m of move.moves){
-            //get weight
-            var g = problem.getNewGrid(problem.grid, m);
-            var weights = calc_weights(g);
-            var balanceCost = Math.abs(weights.left_weight - weights.right_weight);
-            var totalCost = m.time + balanceCost;
-            if(totalCost < minCost){ minCost = totalCost}
+    const moves = getMoves(problem.grid); 
+    let minTime = Number.MAX_SAFE_INTEGER; 
+
+    for (const move of moves) {
+        for (const m of move.moves) {
+            const manhattanTime = Math.abs(m.oldRow - m.newRow) + Math.abs(m.oldColumn - m.newColumn); // Manhattan distance
+            const totalCost = manhattanTime + weightDifference; // Combine cost of move and imbalance penalty
+
+            minTime = Math.min(minTime, totalCost); // Track minimum cost
         }
     }
-    return minCost;
+
+    return minTime;
 }
 
-
-function setMove(grid, move){
-    var newGrid = grid.map(row =>row.map(cell => ({...cell})));
+function serialize(grid) {
+    return grid.map(row => row.map(cell => cell.name).join(',')).join('|');
 }
 
 
@@ -145,24 +143,15 @@ export default function handleBalancing(manifestText) { //A* search
     while(!frontier.isEmpty()){
 
         var currNode = frontier.dequeue(); 
-
-        console.log(currNode.problem.grid);
-    
-        //check for goal 
         var weights = calc_weights(currNode.problem.grid);
-        console.log(weights)
 
-        if (checkBalance(weights)) {
-
-            // return currentNode.getPath(); // Return the optimal path
-            //need to add "move" for type 
-            solutionPath = currNode.getPath();
-            break;
-            
+        if (checkBalance(weights)) {  //goal reached
+            solutionPath = currNode.path();
+            break;  
         }
         
         //need to serialize first since complex data for visited map!!!
-        var gridSerial =JSON.stringify(currNode.problem.grid)
+        var gridSerial = serialize(currNode.problem.grid);
         if(!visited.has(gridSerial)){
             visited.add(gridSerial);
 
@@ -177,7 +166,7 @@ export default function handleBalancing(manifestText) { //A* search
                     var newCost = currNode.cost + i.time;
                     var child = new Node(newP, currNode, i, newCost);
 
-                    frontier.enqueue(child, currNode.cost + heuristic(newP));
+                    frontier.enqueue(child, newCost + heuristic(newP)); //currNode.cost is g(n)
 
                 }
             }
@@ -187,15 +176,25 @@ export default function handleBalancing(manifestText) { //A* search
 
     //Will, check here if solutionPath is null to check if SIFT needs to be used
     //if there is no solution, solutionPath = null after exiting while loop
-    console.log(solutionPath);
+    //console.log(solutionPath);
 
-    if(solutionPath !== null){
+    if(solutionPath === null){
         //process results ---> add type: move && shift results (no 0 indexing)
+        console.error("No solution found. Will use SIFT");
 
+    }
+    else{
+        return solutionPath.map(move => ({
+            ...move,
+            oldRow: move.oldRow + 1, // Already adjusted in validateMoves
+            oldColumn: move.oldColumn + 1,
+            newRow: move.newRow + 1,
+            newColumn: move.newColumn + 1,
+        }));
     }
     
 
-    return optimalOperations;
+    //return solutionPath;
 }
 
 

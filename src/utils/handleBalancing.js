@@ -3,6 +3,7 @@
 import {Problem, Node, processData} from './problem.js'
 import {priorityQueue} from './priority.js'
 
+
 /**
  * TO DO:
  * 6) SIFT function (when balance not possible, and need to move all containers to buffer zone)
@@ -33,14 +34,25 @@ function calc_weights(grid){
 }
 
 //check currrent weight sides of ship to goal weight
-function checkBalance(weights){ 
+// function checkBalance(weights){ 
 
-    var isBalanced = false;
-    if(Math.abs(weights.left_weight - weights.right_weight) <= 2){
-        isBalanced = true;
+//     var isBalanced = false;
+//     // if(Math.abs(weights.left_weight - weights.right_weight) <= 2){
+//     //     isBalanced = true;
+//     // }
+//     return isBalanced;
+// }
+
+//Not |weights| <=2, should be within 10% of each other!
+function checkBalance(weights) {
+    const maxWeight = Math.max(weights.left_weight, weights.right_weight);
+    const weightDifference = Math.abs(weights.left_weight - weights.right_weight);
+    if(weightDifference <= 0.1 * maxWeight){
+        return true;
     }
-
-    return isBalanced;
+    else{
+        return false;
+    }
 }
 
 
@@ -64,8 +76,8 @@ function validateMoves(grid, row, col){ //coordinate of container
                     newColumn:j,
                     time: t,
                 });
-                break;
             }
+      
         }
     }
 
@@ -78,8 +90,8 @@ function getMoves(grid){
     var allMoves = [];
     for(var i = 0; i < grid.length; i++){
         for(var j = 0; j < grid[i].length; j++){
-
-            if(grid[i][j].name !== "NAN" && grid[i][j].name !== "UNUSED" ){
+            const container = grid[i][j];
+            if(container && grid[i][j].name !== "NAN" && grid[i][j].name !== "UNUSED" ){
                 var no_containerTop = i === grid.length - 1 || grid[i+1][j].name === "UNUSED";
                 if(no_containerTop){
                     allMoves.push({
@@ -96,26 +108,50 @@ function getMoves(grid){
 
 //heuristic  --> estimate min time to from current state to balance ship
 function heuristic(problem) {
-    const { left_weight, right_weight } = calc_weights(problem.grid);
-    const weightDifference = Math.abs(left_weight - right_weight); // Penalty for weight imbalance
 
-    const moves = getMoves(problem.grid); 
-    let minTime = Number.MAX_SAFE_INTEGER; 
+    var weights = calc_weights(problem.grid);
+    //how unbalanced problem is rn
+    const weightDif = Math.abs(weights.left_weight - weights.right_weight); 
+
+    var moves = getMoves(problem.grid); 
+    var score = Number.MAX_SAFE_INTEGER;  
 
     for (const move of moves) {
         for (const m of move.moves) {
-            const manhattanTime = Math.abs(m.oldRow - m.newRow) + Math.abs(m.oldColumn - m.newColumn); // Manhattan distance
-            const totalCost = manhattanTime + weightDifference; // Combine cost of move and imbalance penalty
 
-            minTime = Math.min(minTime, totalCost); // Track minimum cost
+            var currCost = Math.abs(m.oldRow - m.newRow) + Math.abs(m.oldColumn - m.newColumn); 
+
+            //take into account the grids that will have less imbalance than to
+            //just simply account for the shortest "movement"
+            var totalCost = currCost + weightDif; 
+
+            score = Math.min(score, totalCost); 
         }
     }
 
-    return minTime;
+    return score;
 }
 
-function serialize(grid) {
-    return grid.map(row => row.map(cell => cell.name).join(',')).join('|');
+
+//need to change this later
+function hashGrid(grid) {
+    let hash = 0;
+    for (let i = 0; i < grid.length; i++) {
+        for (let j = 0; j < grid[i].length; j++) {
+            var cell = grid[i][j];
+            var cellHash = `${cell.name}-${cell.w}`; // Combining name and weight
+            hash = hash * 31 + stringToHash(cellHash);
+        }
+    }
+    return hash;
+}
+
+function stringToHash(str) {
+    var hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        hash = (hash << 5) - hash + str.charCodeAt(i);
+    }
+    return hash;
 }
 
 
@@ -126,8 +162,7 @@ function serialize(grid) {
 export default function handleBalancing(manifestText) { //A* search
 
     var frontier = new priorityQueue();         //frontier for A*
-    var visited = new Set();                    //keep track of visited nodes
-    const optimalOperations = [];   //returns the optimal solution (based on time)
+    var visited = new Map();                    //keep track of visited nodes
     var solutionPath = [];
 
     var buffer = Array.from({length: 4}, ()=> new Array(24).fill("UNUSED")); //buffer space
@@ -138,22 +173,27 @@ export default function handleBalancing(manifestText) { //A* search
     var root = new Node(p, null, null, 0); 
     frontier.enqueue(root, 0);
 
-    
 
     while(!frontier.isEmpty()){
 
         var currNode = frontier.dequeue(); 
         var weights = calc_weights(currNode.problem.grid);
 
+        // console.log("Exploring node with cost: ", currNode.cost);
+        // console.log("Grid state: ", currNode.problem.grid);
+        // console.log("frontier size")
+
         if (checkBalance(weights)) {  //goal reached
             solutionPath = currNode.path();
             break;  
         }
         
-        //need to serialize first since complex data for visited map!!!
-        var gridSerial = serialize(currNode.problem.grid);
-        if(!visited.has(gridSerial)){
-            visited.add(gridSerial);
+        var gridHash = hashGrid(currNode.problem.grid);
+        //var gridSerial = serialize(currNode.problem.grid);
+        // if(!visited.has(gridSerial)){
+        if(!visited.has(gridHash)){
+            // visited.add(gridSerial);
+            visited.set(gridHash, currNode.cost); 
 
             //get possible moves
             var moves = getMoves(currNode.problem.grid)
@@ -173,14 +213,17 @@ export default function handleBalancing(manifestText) { //A* search
         }
     }
 
+    console.log("out of while loop")
 
-    //Will, check here if solutionPath is null to check if SIFT needs to be used
-    //if there is no solution, solutionPath = null after exiting while loop
-    //console.log(solutionPath);
+
+
 
     if(solutionPath === null){
         //process results ---> add type: move && shift results (no 0 indexing)
         console.error("No solution found. Will use SIFT");
+        return [] //delete later
+
+        //call shift from here
 
     }
     else{
@@ -196,7 +239,6 @@ export default function handleBalancing(manifestText) { //A* search
 
     //return solutionPath;
 }
-
 
 
 

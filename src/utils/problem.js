@@ -25,15 +25,6 @@ class Problem{
 
     }
 
-    //functions specifically for balancing, I wrote them in handleBalancing
-
-    //if needed
-    // setGrid(grid){
-    //     this.grid = grid;
-    // }
-
-
-
 
     setBuffer(nex, newY, name){}
     bufferEmpty(){}; //returns true if nothing is in the buffer

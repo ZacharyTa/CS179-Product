@@ -3,7 +3,6 @@
 import {Problem, Node, processData} from './problem.js'
 import {priorityQueue} from './priority.js'
 
-
 /**
  * TO DO:
  * 6) SIFT function (when balance not possible, and need to move all containers to buffer zone)
@@ -33,27 +32,53 @@ function calc_weights(grid){
     return {left_weight, right_weight}
 }
 
-//check currrent weight sides of ship to goal weight
-// function checkBalance(weights){ 
 
-//     var isBalanced = false;
-//     // if(Math.abs(weights.left_weight - weights.right_weight) <= 2){
-//     //     isBalanced = true;
-//     // }
-//     return isBalanced;
-// }
 
+//"total mass of the port side, and the total mass of the starboard side are within ten percent of each other."
 //Not |weights| <=2, should be within 10% of each other!
 function checkBalance(weights) {
+
     const maxWeight = Math.max(weights.left_weight, weights.right_weight);
     const weightDifference = Math.abs(weights.left_weight - weights.right_weight);
-    if(weightDifference <= 0.1 * maxWeight){
-        return true;
-    }
-    else{
-        return false;
-    }
+
+    if(weightDifference <= 0.1 * maxWeight){ return true; }
+    else{ return false;}
 }
+
+
+function findTime(grid, r, c, i ,j){
+    //directions
+    var dir = [ {row: 1, col: 0 },
+                {row: -1, col: 0},
+                {row: 0, col: -1},
+                {row: 0, col: 1 }]
+
+    var q = [{row: r, col: c, time: 0}];
+    var seen = new Set();
+    seen.add(`${r}-${c}`);
+
+    while (q.length > 0){
+        //if end and start are the same then done
+        var {row, col, time} = q.shift();
+        if(row === i && col ===j){return time;}
+        
+        for( var{row: dr, col: dc} of dir){
+            var newR = row + dr;
+            var newC = col + dc;
+            // if with grid bounds
+            if(newR >=0 && newR < grid.length && newC >= 0 && newC < grid[0].length){
+                //if not visited and available to be moved to (so no nan or other containers)
+                if (!seen.has(`${newR}-${newC}`) && grid[newR][newC].name === "UNUSED"){
+                    seen.add(`${newR}-${newC}`);
+                    q.push({row: newR, col: newC, time:time + 1});
+                }
+            }
+        }
+    }
+
+    return -1;
+}
+
 
 
 
@@ -66,7 +91,10 @@ function validateMoves(grid, row, col){ //coordinate of container
         for(var i =0; i < grid.length; i++){
             if(grid[i][j].name === "UNUSED" && j !== col){
 
-                var t = Math.abs(row-i) + Math.abs(col-j);
+                var c = Math.abs(row-i) + Math.abs(col-j);
+                //need actual time taking into account obstacles
+                var t = findTime(grid, row, col, i , j);
+                
                 moves.push({
                     type: "move",
                     name: grid[row][col].name,
@@ -74,6 +102,7 @@ function validateMoves(grid, row, col){ //coordinate of container
                     oldColumn: col,
                     newRow: i ,
                     newColumn:j,
+                    cost: c,
                     time: t,
                 });
             }
@@ -133,7 +162,7 @@ function heuristic(problem) {
 }
 
 
-//need to change this later
+//need to make it for 2d object 
 function hashGrid(grid) {
     let hash = 0;
     for (let i = 0; i < grid.length; i++) {
@@ -185,6 +214,7 @@ export default function handleBalancing(manifestText) { //A* search
 
         if (checkBalance(weights)) {  //goal reached
             solutionPath = currNode.path();
+            // solutionPath = setTimeForSolutionPath(currNode.problem.grid, solutionPath);
             break;  
         }
         
@@ -203,7 +233,7 @@ export default function handleBalancing(manifestText) { //A* search
 
                     var newGrid = currNode.problem.getNewGrid(currNode.problem.grid, i);
                     var newP = new Problem(newGrid)
-                    var newCost = currNode.cost + i.time;
+                    var newCost = currNode.cost + i.cost;
                     var child = new Node(newP, currNode, i, newCost);
 
                     frontier.enqueue(child, newCost + heuristic(newP)); //currNode.cost is g(n)

@@ -38,10 +38,11 @@ function calc_weights(grid){
 //Not |weights| <=2, should be within 10% of each other!
 function checkBalance(weights) {
 
-    const maxWeight = Math.max(weights.left_weight, weights.right_weight);
-    const weightDifference = Math.abs(weights.left_weight - weights.right_weight);
+    //const maxWeight = Math.max(weights.left_weight, weights.right_weight);
+    var totalWeight = weights.left_weight + weights.right_weight;
+    var weightDifference = Math.abs(weights.left_weight - weights.right_weight);
 
-    if(weightDifference <= 0.1 * maxWeight){ return true; }
+    if(weightDifference <= 0.1 * totalWeight){ return true; }
     else{ return false;}
 }
 
@@ -83,37 +84,46 @@ function findTime(grid, r, c, i ,j){
 
 
 //simply returns valid moves for 1 container
-function validateMoves(grid, row, col){ //coordinate of container
-    
-    var moves = []; //store starting and ending locations
+function validateMoves(grid, row, col) { // Coordinates of the container
+    var moves = []; // Store valid moves
 
-    for(var j = 0; j < grid[0].length; j++){     
-        for(var i =0; i < grid.length; i++){
-            if(grid[i][j].name === "UNUSED" && j !== col){
+    for (var j = 0; j < grid[0].length; j++) {
+        if (j === col) continue; // Skip the current column
 
-                var c = Math.abs(row-i) + Math.abs(col-j);
-                //need actual time taking into account obstacles
-                var t = findTime(grid, row, col, i , j);
-                
-                moves.push({
-                    type: "move",
-                    name: grid[row][col].name,
-                    oldRow: row ,
-                    oldColumn: col,
-                    newRow: i ,
-                    newColumn:j,
-                    cost: c,
-                    time: t,
-                });
+        // Find the highest available position in the target column
+        let targetRow = -1; // Default to no valid position
+        for (var i = 0; i < grid.length; i++) {
+            if (grid[i][j].name === "UNUSED") {
+                // Check if it's the highest valid `UNUSED` cell
+                if (i === 0 || grid[i - 1][j].name !== "UNUSED") {
+                    targetRow = i; // This is the correct position
+                    break;
+                }
             }
-      
+        }
+
+        // If a valid target row was found, add the move
+        if (targetRow !== -1) {
+            var c = Math.abs(row - targetRow) + Math.abs(col - j); // Manhattan distance
+            var t = findTime(grid, row, col, targetRow, j); // Find time with obstacles
+
+            moves.push({
+                type: "move",
+                name: grid[row][col].name,
+                oldRow: row,
+                oldColumn: col,
+                newRow: targetRow,
+                newColumn: j,
+                cost: c,
+                time: t,
+            });
         }
     }
 
     return moves;
-
 }
 
+ 
 //using validateMoves, returns all moves for all containers (in 1 grid)
 function getMoves(grid){
     var allMoves = [];
@@ -122,10 +132,14 @@ function getMoves(grid){
             const container = grid[i][j];
             if(container && grid[i][j].name !== "NAN" && grid[i][j].name !== "UNUSED" ){
                 var no_containerTop = i === grid.length - 1 || grid[i+1][j].name === "UNUSED";
+                //var no_containerTop = i === grid.length - 1 || grid[i+1][j].name === "UNUSED" || grid[i+1][j].name === "NAN";
+
                 if(no_containerTop){
+                    
                     allMoves.push({
                         moves: validateMoves(grid, i, j),
-                    })
+                        
+                    } )
                 }
             }
         }
@@ -181,11 +195,20 @@ export default function handleBalancing(manifestText) { //A* search
     frontier.enqueue(root, 0);
 
 
+
+    //testing
+    // var temp = frontier.dequeue();
+    // var x = getMoves(temp.problem.grid);
+    // console.log("before forloop: ", x);
+
+  
     while(!frontier.isEmpty()){
 
         var currNode = frontier.dequeue(); 
         var weights = calc_weights(currNode.problem.grid);
 
+        console.log("node grid expanded:", currNode.problem.grid);
+        console.log("weights: ", weights);
         // console.log("Exploring node with cost: ", currNode.cost);
         // console.log("Grid state: ", currNode.problem.grid);
         // console.log("frontier size")
@@ -200,13 +223,17 @@ export default function handleBalancing(manifestText) { //A* search
         //var gridSerial = serialize(currNode.problem.grid);
         // if(!visited.has(gridSerial)){
         if(!visited.has(gridHash)){
+            console.log("was not visited already")
             // visited.add(gridSerial);
             visited.set(gridHash, currNode.cost); 
 
             //get possible moves
             var moves = getMoves(currNode.problem.grid)
+            console.log("moves for expanded node: ", moves)
 
             for(var m of moves){
+                // console.log("name: ", m.name)
+                // console.log("name: ", m)
                 for( var i of m.moves){
 
                     var newGrid = currNode.problem.getNewGrid(currNode.problem.grid, i);
@@ -215,10 +242,13 @@ export default function handleBalancing(manifestText) { //A* search
                     var child = new Node(newP, currNode, i, newCost);
 
                     frontier.enqueue(child, newCost + heuristic(newP)); //currNode.cost is g(n)
+                    // console.log("child grid: ", child.problem.grid)
+                    // console.log("frontier: ", frontier);
 
                 }
             }
         }
+        console.log("was visited already")
     }
 
     console.log("out of while loop")

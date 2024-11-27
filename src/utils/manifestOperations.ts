@@ -3,6 +3,7 @@
 import { OutputLoadOperation } from "@/lib/types";
 import { getManifestData, setManifestData } from "@/utils/manifestCookies";
 import { getBufferData, setBufferData } from "@/utils/bufferCookies";
+import { addLog } from "@/utils/logCookies";
 
 //TODO: needa handle how to handle buffer
 // buffer coords are (row, -col)
@@ -143,7 +144,7 @@ export default function applyOperation(
   //handle move
   else if (operation.type === "move") {
     //{type: "move", name: "Beans", time: 1, oldRow: 1, oldColumn: 4, newRow: 1, newColumn: 5},
-    console.log("Handling move operation: ", operation);
+    // console.log("Handling move operation: ", operation);
     const index = manifestData.findIndex(
       (entry) =>
         entry &&
@@ -190,7 +191,8 @@ export default function applyOperation(
 
   //handle offload
   else if (operation.type === "offload") {
-    console.log("Handling offload:", operation);
+    // console.log("Handling offload:", operation);
+    addLog(`\"${operation.name}\" is offloaded.`)
 
     const index = manifestData.findIndex(
       (entry) =>
@@ -215,7 +217,8 @@ export default function applyOperation(
 
   //handle onload
   else if (operation.type === "onload") {
-    console.log("Handling onload:", operation);
+    // console.log("Handling onload:", operation);
+    addLog(`\"${operation.name}\" is onloaded.`)
 
     // add new entry
     const newEntry = {

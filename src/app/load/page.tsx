@@ -9,6 +9,8 @@ import { OutputLoadOperation, Container } from "@/lib/types";
 import { getManifestData } from "@/utils/manifestCookies";
 import { useRouter } from "next/navigation";
 import handleLoading from "@/utils/handleLoading";
+import Log from "@/components/Log";
+import { setSelection } from "@/utils/selectionCookies";
 
 export default function LoadPage() {
   const router = useRouter();
@@ -68,6 +70,11 @@ export default function LoadPage() {
       return;
     }
 
+    let weight = prompt("Enter cargo's weight/mass(kg):");
+    if (!weight) {
+      weight = "0";
+    }
+
     const operation: OutputLoadOperation = {
       type: "onload",
       name: name,
@@ -76,6 +83,7 @@ export default function LoadPage() {
       oldColumn: 0,
       newRow: 0,
       newColumn: 0,
+      weight: parseInt(weight, 10),
     };
 
     const updatedOperations = [...operations, operation]; // Shallow copy just in case for race condition
@@ -84,13 +92,14 @@ export default function LoadPage() {
   };
 
   const handleFinish = () => {
+    setSelection("loading");
     const optimalOperations = handleLoading(getManifestData(), operations);
     setOperations(optimalOperations);
 
     router.push("/balance");
   };
 
-  const handleRemoveOperaiton = (operationName: string) => {
+  const handleRemoveOperation = (operationName: string) => {
     const updatedOperations = operations.filter(
       (operation) => operation.name !== operationName,
     );
@@ -109,7 +118,7 @@ export default function LoadPage() {
           operations={operations}
           updateManifestText={updateManifestText}
           loading={true}
-          onRemoveOperation={handleRemoveOperaiton}
+          onRemoveOperation={handleRemoveOperation}
         />
       }
     >
@@ -128,12 +137,19 @@ export default function LoadPage() {
             )}
           </div>
           <div className="col-span-3 col-start-1 row-start-5 outline outline-red-500">
-            <button className="btn btn-secondary" onClick={handleOnload}>
-              Add Cargo
-            </button>
-            <button className="btn btn-primary" onClick={handleFinish}>
-              Finish
-            </button>
+            <div className="flex flex-row items-center gap-2">
+              <div className="flex-1">
+                <Log />
+              </div>
+              <div className="flex-3 flex flex-col gap-2 justify-between">
+                <button className="btn btn-secondary" onClick={handleOnload}>
+                  Add Cargo
+                </button>
+                <button className="btn btn-primary" onClick={handleFinish}>
+                  Finish
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>

@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import Cookies from "js-cookie";
 
 interface ManifestUploadProps {
-  onManifestUpload: (manifestText: string) => void; // Pass this to parent component
+  onManifestUpload: (manifestText: string, fileName: string) => void; // Pass this to parent component
 }
 
 const ManifestUpload: React.FC<ManifestUploadProps> = ({
@@ -18,7 +18,7 @@ const ManifestUpload: React.FC<ManifestUploadProps> = ({
       const file = event.target.files[0];
       const text = await file.text();
       setManifestText(text);
-      onManifestUpload(text);
+      onManifestUpload(text, file.name);
       Cookies.set("manifestFileName", file.name);
     }
   };

@@ -20,7 +20,7 @@ const OperationCard: React.FC<OperationCardProps> = ({
   loading,
   onRemove,
 }) => {
-  const { type, name, oldRow, oldColumn, newRow, newColumn } = operation;
+  const { type, name, oldRow, oldColumn, newRow, newColumn, time } = operation;
   const [weight, setWeight] = useState<number | "">(operation.weight || 0);
 
   const handleNext = () => {
@@ -77,6 +77,9 @@ const OperationCard: React.FC<OperationCardProps> = ({
       <div className="card-body">
         <div className="flex flex-row justify-between">
           <h2 className="card-title text-base-content">{`${type.toUpperCase()}`}</h2>
+          <span className="text-base-content text-sm font-light">
+            {time} mins
+          </span>
           <button
             className="btn btn-circle btn-xs text-error"
             onClick={handleRemove}
@@ -102,7 +105,7 @@ const OperationCard: React.FC<OperationCardProps> = ({
           <span className="text-sm">Item: </span>
           <span className="text-lg font-bold italic">{name}</span>
         </p>
-        {type === "onload" && !loading && (
+        {type === "onload" && (
           <div className="form-control">
             <label className="label">
               <span className="label-text">Weight:</span>

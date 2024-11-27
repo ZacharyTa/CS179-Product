@@ -1,5 +1,5 @@
 // OperationList.tsx
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import OperationCard from "./OperationCard";
 import { OutputLoadOperation } from "@/lib/types";
 import { getManifestData, getManifestFileName } from "@/utils/manifestCookies";
@@ -11,6 +11,8 @@ import {
 import FinishModal from "@/components/FinishModal";
 import { removeAllCookies } from "@/utils/removeAllCookies";
 import { useRouter } from "next/navigation";
+import { getSelection } from "@/utils/selectionCookies";
+import { addLog } from "@/utils/logCookies";
 
 interface OperationListProps {
   operations: OutputLoadOperation[];
@@ -18,6 +20,7 @@ interface OperationListProps {
   updateBufferText?: (newBufferText: string) => void;
   onRemoveOperation?: (operationName: string) => void;
   loading: boolean;
+  updateCurrentOperationIndex: (index: number) => void;
 }
 
 const OperationList: React.FC<OperationListProps> = ({
@@ -26,6 +29,7 @@ const OperationList: React.FC<OperationListProps> = ({
   updateBufferText,
   onRemoveOperation,
   loading,
+  updateCurrentOperationIndex,
 }) => {
   const [currentIndex, setCurrentIndex] = useState(getCurrentOperationIndex());
   const cardRef = useRef<(HTMLDivElement | null)[]>([]);
@@ -39,6 +43,7 @@ const OperationList: React.FC<OperationListProps> = ({
       setCurrentOperationIndex(newIndex);
       updateManifestText(getManifestData());
       if (updateBufferText) updateBufferText(getBufferData());
+      updateCurrentOperationIndex(newIndex);
     }
   };
 
@@ -66,8 +71,23 @@ const OperationList: React.FC<OperationListProps> = ({
   };
 
   const handleFinish = () => {
+    const selection = getSelection();
+    if (selection === "balancing")
+      addLog(
+        `Finished Balancing. Reminder Pop-up to download and send Manifest ${getManifestFileName().concat("OUTBOUND.txt")} to captain was displayed.`,
+      );
+    else if (selection === "loading")
+      addLog(
+        `Finished Loading/Unloading. Reminder Pop-up to download and send Manifest ${getManifestFileName().concat("OUTBOUND.txt")} to captain was displayed.`,
+      );
     setIsFinishModalOpen(true);
   };
+
+  const remaininTime = useMemo(() => {
+    return operations
+      .slice(currentIndex)
+      .reduce((total, op) => total + (op.time || 0), 0);
+  }, [operations, currentIndex]);
 
   useEffect(() => {
     const currentCard = cardRef.current[currentIndex];
@@ -77,79 +97,91 @@ const OperationList: React.FC<OperationListProps> = ({
   }, [currentIndex]);
 
   return (
-    <div
-      id="operation-list"
-      className="carousel carousel-vertical h-full overflow-y-auto snap-y snap-mandatory gap-4"
-    >
-      {/* Dummy card at the beginning */}
-      <div
-        className="carousel-item w-full snap-center opacity-0"
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          height: "25vh",
-        }}
-      >
-        <div className="card"></div>
-      </div>
-
-      {operations.map((operation, index) => (
-        <div
-          key={index}
-          ref={(element) => {
-            cardRef.current[index] = element;
-          }}
-          className={`carousel-item w-full snap-center ${
-            index === currentIndex || loading ? "opacity-100" : "opacity-50"
-          }`}
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <OperationCard
-            operation={operation}
-            showNextButton={index === currentIndex}
-            onNext={() => handleNext()}
-            loading={loading}
-            onRemove={() =>
-              onRemoveOperation && onRemoveOperation(operation.name)
-            }
-          />
+    <div className="operation-list-container relative">
+      {!loading && (
+        <div className="remaining-time sticky top-0 bg-gray-800 rounded-md text-center z-10 shadow-lg">
+          <p className="text-white">Estimated Remaining Time:</p>
+          <p className="text-white font-semibold"> {remaininTime} Minutes</p>
+          <p className="text-white mt-4">
+            Moves: {Math.min(currentIndex + 1, operations.length)} /{" "}
+            {operations.length}
+          </p>
         </div>
-      ))}
-
-      {/* Dummy card at the end */}
-      {currentIndex < operations.length && (
+      )}
+      <div
+        id="operation-list"
+        className="carousel carousel-vertical h-full overflow-y-auto snap-y snap-mandatory gap-4"
+      >
+        {/* Dummy card at the beginning */}
         <div
           className="carousel-item w-full snap-center opacity-0"
           style={{
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
-            height: "25vh",
+            height: "15vh",
           }}
         >
           <div className="card"></div>
         </div>
-      )}
-      {/* finished button */}
-      {!loading && currentIndex >= operations.length && (
-        <div className="flex justify-center mt-4">
-          <button className="btn btn-primary" onClick={handleFinish}>
-            Finish
-          </button>
-        </div>
-      )}
-      <FinishModal
-        title="Cargo Loading Complete"
-        body="Please make sure to download and sent Manifest Outbound to captain before closing."
-        isOpen={isFinishModalOpen}
-        onDownload={handleDownload}
-        onDone={handleDone}
-      />
+
+        {operations.map((operation, index) => (
+          <div
+            key={index}
+            ref={(element) => {
+              cardRef.current[index] = element;
+            }}
+            className={`carousel-item w-full snap-center ${
+              index === currentIndex || loading ? "opacity-100" : "opacity-50"
+            }`}
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <OperationCard
+              operation={operation}
+              showNextButton={index === currentIndex}
+              onNext={() => handleNext()}
+              loading={loading}
+              onRemove={() =>
+                onRemoveOperation && onRemoveOperation(operation.name)
+              }
+            />
+          </div>
+        ))}
+
+        {/* Dummy card at the end */}
+        {currentIndex < operations.length && (
+          <div
+            className="carousel-item w-full snap-center opacity-0"
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              height: "25vh",
+            }}
+          >
+            <div className="card"></div>
+          </div>
+        )}
+        {/* finished button */}
+        {!loading && currentIndex >= operations.length && (
+          <div className="flex justify-center mt-4">
+            <button className="btn btn-primary" onClick={handleFinish}>
+              Finish
+            </button>
+          </div>
+        )}
+        <FinishModal
+          title="Cargo Loading Complete"
+          body="Please make sure to download and sent Manifest Outbound to captain before closing."
+          isOpen={isFinishModalOpen}
+          onDownload={handleDownload}
+          onDone={handleDone}
+        />
+      </div>
     </div>
   );
 };

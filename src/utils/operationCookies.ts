@@ -18,3 +18,13 @@ export function getCurrentOperationIndex(): number {
 export function setCurrentOperationIndex(index: number): void {
   Cookies.set("currentOperationIndex", index.toString());
 }
+
+export function getCurrentOperation(): OutputLoadOperation | null {
+  const operations = getOperations();
+  const currentIndex = getCurrentOperationIndex();
+  if (currentIndex >= 0 && currentIndex < operations.length) {
+    return operations[currentIndex];
+  } else {
+    return null;
+  }
+}

@@ -57,6 +57,29 @@ class Node{
 
 
 
+//need to make hasing for 2d object 
+function hashGrid(grid) {
+    let hash = 0;
+    for (let i = 0; i < grid.length; i++) {
+        for (let j = 0; j < grid[i].length; j++) {
+            var cell = grid[i][j];
+            var cellHash = `${cell.name}-${cell.w}`; // Combining name and weight
+            hash = hash * 31 + stringToHash(cellHash);
+        }
+    }
+    return hash;
+}
+
+function stringToHash(str) {
+    var hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        hash = (hash << 5) - hash + str.charCodeAt(i);
+    }
+    return hash;
+}
+
+
+
 //Function to process the manifestText (this is a string)
 function processData(manifestText){
     const grid = Array.from({length: 8}, ()=> new Array(12).fill(null));
@@ -85,5 +108,5 @@ function processData(manifestText){
 //info[2] = "string"
 
 
-export {Problem, Node, processData}
+export {Problem, Node, processData, hashGrid}
 

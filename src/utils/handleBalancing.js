@@ -1,6 +1,6 @@
 // logic for handling the A* search algo smth
 
-import {Problem, Node, processData} from './problem.js'
+import {Problem, Node, processData, hashGrid} from './problem.js'
 import {priorityQueue} from './priority.js'
 
 /**
@@ -162,28 +162,6 @@ function heuristic(problem) {
 }
 
 
-//need to make it for 2d object 
-function hashGrid(grid) {
-    let hash = 0;
-    for (let i = 0; i < grid.length; i++) {
-        for (let j = 0; j < grid[i].length; j++) {
-            var cell = grid[i][j];
-            var cellHash = `${cell.name}-${cell.w}`; // Combining name and weight
-            hash = hash * 31 + stringToHash(cellHash);
-        }
-    }
-    return hash;
-}
-
-function stringToHash(str) {
-    var hash = 0;
-    for (let i = 0; i < str.length; i++) {
-        hash = (hash << 5) - hash + str.charCodeAt(i);
-    }
-    return hash;
-}
-
-
 //f(n) = g(n) + h(n);
 //g(n) -> current time
 //h(n) -> estimated cost of time to reach goal 
@@ -257,7 +235,7 @@ export default function handleBalancing(manifestText) { //A* search
 
     }
     else{
-        return solutionPath.map(move => ({
+        return solutionPath.map(({cost, ...move})=> ({
             ...move,
             oldRow: move.oldRow + 1, // Already adjusted in validateMoves
             oldColumn: move.oldColumn + 1,

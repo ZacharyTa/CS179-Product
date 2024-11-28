@@ -59,16 +59,16 @@ class Node{
 
 //need to make hasing for 2d object 
 function hashGrid(grid) {
-    let hash = 0;
+    let hash = '';
     for (let i = 0; i < grid.length; i++) {
         for (let j = 0; j < grid[i].length; j++) {
-            var cell = grid[i][j];
-            var cellHash = `${cell.name}-${cell.w}`; // Combining name and weight
-            hash = hash * 31 + stringToHash(cellHash);
+            let cell = grid[i][j];
+            hash += `${i}-${j}-${cell.name}-${cell.w}|`;
         }
     }
-    return hash;
+    return stringToHash(hash);
 }
+
 
 function stringToHash(str) {
     var hash = 0;

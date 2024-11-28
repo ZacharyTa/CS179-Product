@@ -222,7 +222,7 @@ export default function handleBalancing(manifestText) { //A* search
         var gridHash = hashGrid(currNode.problem.grid);
         //var gridSerial = serialize(currNode.problem.grid);
         // if(!visited.has(gridSerial)){
-        if(!visited.has(gridHash)){
+        if(!visited.has(gridHash) || visited.get(gridHash) > currNode.cost){
             console.log("was not visited already")
             // visited.add(gridSerial);
             visited.set(gridHash, currNode.cost); 

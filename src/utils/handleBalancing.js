@@ -37,13 +37,21 @@ function calc_weights(grid){
 //"total mass of the port side, and the total mass of the starboard side are within ten percent of each other."
 function checkBalance(weights) {
 
-    //const maxWeight = Math.max(weights.left_weight, weights.right_weight);
-    var totalWeight = weights.left_weight + weights.right_weight;
-    var weightDifference = Math.abs(weights.left_weight - weights.right_weight);
+    var nom = Math.abs(weights.right_weight - weights.left_weight);
+    var den = (weights.left_weight + weights.right_weight) / 2;
 
-    if(weightDifference <= 0.1 * totalWeight){ return true; }
-    else{ return false;}
+    var tot = (nom / den ) * 100;
+
+    if (tot <= 10.0){
+        return true;
+    }
+    else{
+        return false;
+    }
+ 
 }
+
+
 
 
 function findTime(grid, r, c, i ,j){
@@ -102,7 +110,7 @@ function validateMoves(grid, row, col) {
 
         // If a valid row 
         if (targetRow !== -1) {
-            // var c = Math.abs(row - targetRow) + Math.abs(col - j); // Manhattan distance
+            var c = Math.abs(row - targetRow) + Math.abs(col - j); // Manhattan distance
             var t = findTime(grid, row, col, targetRow, j); // Find time with obstacles
 
             moves.push({
@@ -112,7 +120,7 @@ function validateMoves(grid, row, col) {
                 oldColumn: col,
                 newRow: targetRow,
                 newColumn: j,
-                // cost: c,
+                cost: c,
                 time: t,
             });
         }
@@ -120,8 +128,6 @@ function validateMoves(grid, row, col) {
 
     return moves;
 }
-
-
 
  
 //using validateMoves, returns all moves for all containers (in 1 grid)
@@ -148,52 +154,110 @@ function getMoves(grid){
 
 }
 
-//heuristic  --> estimate min time to from current state to balance ship
-function heuristic(problem) {
-   
-    var max = Number.MAX_SAFE_INTEGER;
-    var weights = calc_weights(problem.grid);  
-    var weightDiff = Math.abs(weights.left_weight - weights.right_weight); // Current imbalance
-    
-    //the total cost that will be returned
-    var cost = 0; 
 
-    // Add  the weight cost going to emphasize more on current weight diff 
-    cost += 2 * weightDiff; 
+//without weights, works, but could be faster
+function heuristic(problem) {
+    // var weights = calc_weights(problem.grid);  
+    // var weightDiff = Math.abs(weights.left_weight - weights.right_weight); // Current imbalance
+    
+    // The total cost that will be returned
+    var cost = 0;
+
+    // Add weight difference directly (focus on minimizing imbalance)
+    // cost +=  weightDiff; 
 
     var moves = getMoves(problem.grid);
+    var minCost = Number.MAX_SAFE_INTEGER;
+
+    // Explore all moves
     for (var move of moves) {
         for (var m of move.moves) {
-            //get the new move that would be made
+            // Simulate the move to create a new grid
             var newGrid = problem.getNewGrid(problem.grid, m);
 
-            //calculate the new weights now for newGrid
+            // Calculate the new weights for the new grid
             var newWeights = calc_weights(newGrid); 
             var newWeightDiff = Math.abs(newWeights.left_weight - newWeights.right_weight);
+         
+            //var manhattanDist = Math.abs(m.oldRow - m.newRow) + Math.abs(m.oldColumn - m.newColumn);
+            var mCost = m.time + cost + newWeightDiff*.001; //manhattanDist;
 
-            //prioritize solutions closer to center (ex: doe)
-            var colDist = Math.abs(m.newColumn - 7);
-            var mCost = m.time + 2 * newWeightDiff + colDist;
-            max = Math.min(max, mCost);
+            minCost = Math.min(minCost, mCost); // Track the minimum estimated cost
         }
     }
 
+    // Add the minimum cost for the best move to the heuristic
+    cost += minCost;
 
-    cost += max;
     return cost;
 }
 
 
 
-// function isSolvable(ship){
+// false - only 1 container or unsolvable
+// true - if solvable
+function isSolvable(ship) {
+    var weights = [];
+    var totalWeight = 0;
 
-//     //will return true or false
-// }
+    for (var i = 0; i < ship.length; i++) {
+        for (var j = 0; j < ship[i].length; j++) {
+            if (ship[i][j] !== "NAN" && ship[i][j] !== "UNUSED") {
+                weights.push(ship[i][j].w);
+                totalWeight += ship[i][j].w;
+            }
+        }
+    }
+
+    // if  only one container, it can't be balanced
+    if (weights.length === 1) {
+        return false;
+    }
+
+   
+    var halfTotalWeight = Math.floor(totalWeight / 2);
+    var dp = Array(halfTotalWeight + 1).fill(false);
+    dp[0] = true; // 0 weight is always achievable
+
+    for (var i = 0; i < weights.length; i++) {
+        for (var j = halfTotalWeight; j >= weights[i]; j--) {
+            if (dp[j - weights[i]]) {
+                dp[j] = true;
+            }
+        }
+    }
 
 
-// function SIFT (ship){
+    for (var leftWeight = 0; leftWeight <= halfTotalWeight; leftWeight++) {
+        if (dp[leftWeight]) {
+            var rightWeight = totalWeight - leftWeight;
 
-// }
+           
+            if (
+                leftWeight >= 0.9 * rightWeight &&
+                leftWeight <= 1.1 * rightWeight
+            ) {
+                console.log(
+                    `Solution found with leftWeight: ${leftWeight} and rightWeight: ${rightWeight}`
+                );
+                return true;
+            }
+        }
+    }
+
+    console.log("precheck: No valid solution");
+    return false;
+}
+
+
+
+
+
+
+
+function SIFT (ship){
+    return [];
+}
 
 
 
@@ -212,18 +276,14 @@ export default function handleBalancing(manifestText) { //A* search
 
     var ship = processData(manifestText); // ship grid; returns an 8x12 grid
 
+    var solvability = isSolvable(ship);
 
-
-    /************************************ after isSolvable is done *****************/
-    //once isSolvable done, changing the return 
-    // var solvability = isSolvable(ship);
-    // if (!solvability){
-    //     solutionPath = SIFT(ship)
-    //     return solutionPath
-    // }
+    if (!solvability){
+        solutionPath = SIFT(ship)
+        return solutionPath
+    }
 
     
-
     var p = new Problem(ship); 
     var root = new Node(p, null, null, 0); 
     frontier.enqueue(root, 0);
@@ -236,6 +296,8 @@ export default function handleBalancing(manifestText) { //A* search
 
         // console.log("node grid expanded:", currNode.problem.grid);
         // console.log("weights: ", weights);
+        // console.log("current g: ", currNode.cost)
+        // console.log("frontier priority value: ",frontier.values[1] )
  
 
         if (checkBalance(weights)) {  //goal reached
@@ -257,10 +319,17 @@ export default function handleBalancing(manifestText) { //A* search
 
                     var newGrid = currNode.problem.getNewGrid(currNode.problem.grid, i);
                     var newP = new Problem(newGrid)
-                    var newCost = currNode.cost + i.time;
+                    var newCost = currNode.cost + i.cost;
                     var child = new Node(newP, currNode, i, newCost);
 
-                    frontier.enqueue(child, newCost + heuristic(newP)); //currNode.cost is g(n)
+                    var h = heuristic(newP)
+                    // console.log("newP: ", newP)
+                    // console.log("newP's h: ", h)
+
+                    var frontierPriority = h + newCost;
+                    // console.log("newP's frontierPriority: ", frontierPriority)
+
+                    frontier.enqueue(child, frontierPriority); //currNode.cost is g(n)
 
                 }
             }

@@ -92,8 +92,6 @@ function processData(manifestText){
         var w = parseInt(info[2].trim().replace(/[^\d]/g ,""), 10);
         var name = info[3].trim();
 
-        //contents needs to flip when stored in to grid
-        // var flip = 7 - row;
         if (row >= 0 && row < 8 && col >= 0 && col < 12){
             grid[row][col] = {w, name}; //@ each grid, has weight and name
         }

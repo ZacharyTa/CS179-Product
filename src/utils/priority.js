@@ -25,6 +25,7 @@ class priorityQueue{
         if(!flag){
             this.values.push({node, priority});
         }
+        this.values.sort((a,b) => a.priority - b.priority)
     }
 
     //remove from priority queue

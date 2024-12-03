@@ -31,27 +31,71 @@ class Problem{
 }
 
 
+// class Crane{
+//     constructor(){
+//         this.path = []; //tracks movements
+    
+//     }
+
+//     //for new position
+//     cranePath(oldRow, oldCol, newRow, newCol) {
+//         this.path.push({ 
+//             from: { row: oldRow, col: oldCol }, 
+//             to: { row: newRow, col: newCol },
+//             time: time 
+//         });
+//     }
+
+//     getMoves(){
+//         return this.path;
+//     }
+
+// }
+
 //Node structure 
 class Node{
 
-    constructor(problem, parent, move, cost){
+    constructor(problem, parent, move, cost, craneMove){
         this.problem = problem;         //the grid
         this.parent = parent; 
         this.move = move,
         this.cost = cost;
+        this.craneMove = craneMove //only if the containers are different
+                                    //else pass [] (gets taken care of in path())
+        
+
+    }
+
+    getCraneMove (){
+        return this.craneMove;
+    }
+
+    getMove(){
+        return this.move; //the new row new col should be where the crane is
     }
 
 
-    path(){
+    path() {
         const path = [];
-        var currNode = this;
-        while (currNode.parent != null){
-            path.unshift(currNode.move) //adding to path
+        let currNode = this;
+    
+        while (currNode.parent != null) {
+            // Add the container move if it's not null and contains valid values
+            if (currNode.move != null && !isNaN(currNode.move.newRow) && !isNaN(currNode.move.newColumn)) {
+                path.unshift(currNode.move);
+            }
+    
+            // Add the crane's move if it's not null and contains valid values
+            if (currNode.craneMove != null && !isNaN(currNode.craneMove.newRow) && !isNaN(currNode.craneMove.newColumn)) {
+                path.unshift(currNode.craneMove);
+            }
+    
             currNode = currNode.parent;
         }
-
+    
         return path;
     }
+    
 
 }
 

@@ -277,7 +277,7 @@ function isSolvable(ship) {
 //in balancing, goal state is a simple equation. each state can be 
 function SIFT (ship){
     console.log("UNSOLVABLE");
-    Sift.obtainGoalState(ship);
+    Sift.operateSift(ship);
     return [];
 }
 

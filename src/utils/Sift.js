@@ -26,8 +26,7 @@ export function obtainGoalState(ship){
           else if (cell["name"]!="UNUSED"){
             crates.push(JSON.parse(JSON.stringify(cell)));
           }
-          //console.log(`Row: ${i}, Col: ${j}`);
-          //console.log(`Cell: ${JSON.stringify(cell)}`);
+
         }
       }
       console.log("CRATES: ", crates);
@@ -54,9 +53,22 @@ export function obtainGoalState(ship){
       return new_grid;
 }
 
-//d
-export function isSifted(){
 
+//d
+export function isSifted(grid, target){
+    for (let i =0; i< grid.length; i++){
+        for (let j = 0; j< grid[i].length; j++){
+            //console.log(grid[i][j]);
+            //console.log(target[i][j]);
+            if (grid[i][j].w!= target[i][j].w || grid[i][j].name!= target[i][j].name ){
+                console.log("wrong");
+                console.log(grid[i][j]);
+                console.log(target[i][j]);
+                return false;
+            }
+        }
+    }
+    return true;
 }
 
 //a* tree creation
@@ -67,7 +79,6 @@ export function operateSift(ship){
 
     //obtain Goal state
     var target = obtainGoalState(ship);
-    
 
 
     var p = new Problem(ship); //problem state
@@ -76,10 +87,26 @@ export function operateSift(ship){
 
     while (!frontier.isEmpty()){
 
-        var currNode = frontier.dequeue();
+        var current = frontier.dequeue();
+
+        console.log("current: ", current.problem.grid);
+        if (isSifted(current.problem.grid, target)){
+            console.log("SIFTED");
+            return current.problem.grid;
+        }
+        //now i need to hash the grid into a key and add it to the visited map.
+        var gridHash = hashGrid(current.problem.grid);
+
+        if (!visited.has(gridHash) || visited.get(gridHash) > current.cost){
+            visited.set(gridHash, current.cost);
+
+            //now i must get all possible moves, and begin astar tree building.
+            //cost : time it takes to move, 
+            //heuristic : something to do with manhattan distance i think? 
+            //like...idk ill add heuristic at the end
+        }
+
         
-
-
         
     }
 }

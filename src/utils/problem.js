@@ -97,6 +97,7 @@ function processData(manifestText){
         }
     });
     
+    console.log("GRID HERE: ", grid)
     return grid; 
 }
 

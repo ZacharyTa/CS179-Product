@@ -1,7 +1,9 @@
 // logic for handling the A* search algo smth
 
+
 import {Problem, Node, processData, hashGrid} from './problem.js'
 import {priorityQueue} from './priority.js'
+import * as Sift from "./Sift.js"
 
 /**
  * TO DO:
@@ -170,6 +172,7 @@ function heuristic(problem) {
     var minCost = Number.MAX_SAFE_INTEGER;
 
     // Explore all moves
+    //for each move
     for (var move of moves) {
         for (var m of move.moves) {
             // Simulate the move to create a new grid
@@ -254,8 +257,27 @@ function isSolvable(ship) {
 
 
 
+//Here is how SIFT is defined: Take all containers, and put them in the buffer. Logically, sort them by weight.
+//Put the heaviest container in slot [01,06], put the second heaviest container in slot [01,07], put the third
+//heaviest container in slot [01,05], put the fourth heaviest container in slot [01,08],.. Etc, until the first row is
+//filled, then start on the second row, beginning with slot [02,06]….
 
+//This describes what the goal state would be, but often you can do this without actually putting all the containers
+//in the buffer. You just compute the goal state, and find the fastest path to get there, which may or may not
+//involve moving some or all containers to the buffer.
+
+//find fastest way to do this....
+
+//so first, goal state: grid with highest to lowest
+//to do this, we first sort all cargo 
+//do astar branching with cost = time 
+//heuristic being something related to goal state
+//terminal is "isBalanced" for balancing, so in this case itll be "isSifted" in this case AKA goal state.
+
+//in balancing, goal state is a simple equation. each state can be 
 function SIFT (ship){
+    console.log("UNSOLVABLE");
+    Sift.obtainGoalState(ship);
     return [];
 }
 
@@ -302,6 +324,7 @@ export default function handleBalancing(manifestText) { //A* search
 
         if (checkBalance(weights)) {  //goal reached
             solutionPath = currNode.path();
+            //why not return?
             break;  
         }
         

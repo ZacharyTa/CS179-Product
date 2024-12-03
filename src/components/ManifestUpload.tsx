@@ -21,7 +21,7 @@ const ManifestUpload: React.FC<ManifestUploadProps> = ({
       onManifestUpload(text);
 
 
-      
+      console.log("TEXT HERE: ", text)
       const balancingOperations = handleBalancing(text);
       console.log("From handleBalancing: ", balancingOperations);
 

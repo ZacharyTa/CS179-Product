@@ -7,12 +7,15 @@ import {Problem, Node, processData, hashGrid} from './problem.js'
 Goal test: we have two options, goal state where we measure time or goal state we know we reached if it we completed all the operations
 so i believe this goal test will need to be when we run out of operations, then we know we are done, we queue the operations based on costs gn and hn
 */
-function goalTest(state) {
-    return 
+function goalTest(ops, operations) {
+    return ops.every(item => operations.includes(item))
 }
 
 // queuing function or expand node function, find next state with operations 
-function expandNode(state) {
+function expandNode(curr, ops, operation, frontier, visited) {
+    let ship = curr.problem.grid;
+    
+    return
 }
 
 //heuristic manhanttan might be able to use balance heuristic function
@@ -55,17 +58,18 @@ export default function handleLoading(manifestText, operations) {
     let ship = processData(manifestText);
     let problem = new Problem(ship);
     let root = new Node(problem, null, null, 0);
+    const ops = [];
     frontier.enqueue(root, 0);
 
     while(!frontier.isEmpty()){
         let curr = frontier.dequeue();
         let cost = curr.getCost();
-        if(goalTest(curr.state)){
+        if(goalTest(ops, operations)){
             solutionPath = curr.path();
             break;
         }
         visited.set(curr, cost)
-        expandNode(curr, frontier, visited);
+        expandNode(curr, ops, operations, frontier, visited);
 
     }   
     // --------------------------------------------------

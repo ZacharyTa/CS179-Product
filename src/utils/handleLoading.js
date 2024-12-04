@@ -31,25 +31,51 @@ function goalTest(ops, operations) {
 function isOperation(op, operations){
     for(let i = 0; i < operations.length; i++){
         if(op.name === operations[i].name){
-            return true;
+            console.log(operations[i]);
+            return [operations[i], true];
         }
     }
-    return false;
+    return [null, false];
 }
 
-function getMoves(ship, i, j, operations){
-    console.log(operations[0].name);
-    console.log(ship[i][j].name);
-    if(isOperation(ship[i][j], operations)){
-        // if(ship[i][j].type)
+function addMoves(parent, moves, ship, i, j, operations){
+    let check = isOperation(ship[i][j], operations); 
+    let isOp = check[1];
+
+    console.log(check);
+    if(isOp){
+        // console.log(type);
+        let op = check[0];
+        let type = op.type;
+        if(type == "offload"){
+            let problem = new Problem(ship);
+            let newOps = parent.ops;
+            let dist = Math.abs(9-i) + Math.abs(0 - (j + 1)) + 2;
+            newOps.push(check[0]);
+            moves.push({
+                move: {
+                    type: "offload",
+                    name: ship[i][j].name,
+                    time: dist,
+                    oldRow: i,
+                    oldCol: j,
+                    newRow: -1,
+                    newCol: -1,
+                },
+                problem: problem,
+                parent: parent,
+                ops: parent.ops,
+                cost: dist,
+            })
+        }else if(type == "onload") {}
     }
     return ship[i][j];
 }
 
 function addOperations(moves, ops, operations) {
-    for (let op in operations){
-        if(!ops.includes(op)){
-            moves.push(op);
+    for (let i = 0; i < operations.length; i++){
+        if(!ops.includes(operations[i]) && ops.type == "onload"){
+            moves.push(operations[i]);
         }
     }
     return
@@ -60,13 +86,12 @@ function expandNode(curr, operations, frontier, visited) {
     addOperations(moves, curr.ops, operations);
     let ship = curr.problem.grid;
     // console.log(ship);
-    for(let i = 0; i < ship.length; i++) {
+    for(let i = ship.length - 1; i >= 0 ; i--) {
+        // console.log(ship[i]);
         for(let j = 0; j < ship[i].length; j++) {
             let container = ship[i][j];
-            // console.log(container.name);
-            if(container.name == "NAN" || container.name == "UNUSED") {continue;}
-            if(ship[i+1][j] == "UNUSED") {continue;}
-            moves.push(getMoves(ship, i, j, operations));
+            if(container.name === 'NAN' || container.name === 'UNUSED') {continue;}
+            addMoves(curr, moves, ship, i, j, operations);
         }
     }
     for (let i = 0; i < moves.length; i++) {
@@ -93,7 +118,7 @@ function heuristic(state) {
 export default function handleLoading(manifestText, operations) {
     let frontier = new priorityQueue();
     const visited = new Map();
-    const solutionPath = [];
+    var solutionPath = [];
 
     // Note: right now, all this does is return the list of operations without any changes
     // This function will handle loading/unloading the containers. 
@@ -129,6 +154,8 @@ export default function handleLoading(manifestText, operations) {
         let curr = frontier.dequeue();
         let cost = curr.cost;
         if(goalTest(curr.getOps(), operations)){
+            console.log(curr);
+            console.log(`curr path: ${curr.path()}`)
             solutionPath = curr.path();
             break;
         }
@@ -150,9 +177,9 @@ export default function handleLoading(manifestText, operations) {
     return solutionPath.map((move)=> ({
         ...move,
         oldRow: move.oldRow + 1,
-        oldColumn: move.oldColumn + 1,
+        oldCol: move.oldCol + 1,
         newRow: move.newRow + 1,
-        newColumn: move.newColumn + 1,
+        newCol: move.newCol + 1,
     }));
 }
 
@@ -255,7 +282,7 @@ let text = `\
 [08,12], {00000}, UNUSED`;
 let shipGrid = processData(text);
 let testOperations = [
-    {type: "onload", name: "Dog"},
-    {type: "onload", name: "Cat"},
-    ]
-handleLoading(text, testOperations)
+    {type: "offload", name: "Cat"},
+    ];
+let testRes = handleLoading(text, testOperations);
+console.log(testRes);

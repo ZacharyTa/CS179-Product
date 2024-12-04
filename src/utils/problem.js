@@ -1,4 +1,3 @@
-
 //class to represent Problem states (tree structure)
 class Problem{
     
@@ -30,62 +29,34 @@ class Problem{
     bufferEmpty(){}; //returns true if nothing is in the buffer
 }
 
-
-// class Crane{
-//     constructor(){
-//         this.path = []; //tracks movements
-    
-//     }
-
-//     //for new position
-//     cranePath(oldRow, oldCol, newRow, newCol) {
-//         this.path.push({ 
-//             from: { row: oldRow, col: oldCol }, 
-//             to: { row: newRow, col: newCol },
-//             time: time 
-//         });
-//     }
-
-//     getMoves(){
-//         return this.path;
-//     }
-
-// }
-
 //Node structure 
 class Node{
 
     constructor(problem, parent, move, cost, craneMove){
-        this.problem = problem;         //the grid
+        this.problem = problem;         
         this.parent = parent; 
         this.move = move,
         this.cost = cost;
         this.craneMove = craneMove //only if the containers are different
                                     //else pass [] (gets taken care of in path())
         
-
     }
 
-    getCraneMove (){
-        return this.craneMove;
-    }
-
-    getMove(){
-        return this.move; //the new row new col should be where the crane is
-    }
+    getCraneMove (){ return this.craneMove;}
+    getMove(){return this.move; }
 
 
     path() {
         const path = [];
         let currNode = this;
     
+        //add container move
         while (currNode.parent != null) {
-            // Add the container move if it's not null and contains valid values
             if (currNode.move != null && !isNaN(currNode.move.newRow) && !isNaN(currNode.move.newColumn)) {
                 path.unshift(currNode.move);
             }
     
-            // Add the crane's move if it's not null and contains valid values
+            //add crane move
             if (currNode.craneMove != null && !isNaN(currNode.craneMove.newRow) && !isNaN(currNode.craneMove.newColumn)) {
                 path.unshift(currNode.craneMove);
             }
@@ -112,7 +83,6 @@ function hashGrid(grid) {
     }
     return stringToHash(hash);
 }
-
 
 function stringToHash(str) {
     var hash = 0;

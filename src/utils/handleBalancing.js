@@ -122,7 +122,7 @@ function validateMoves(grid, row, col) {
                 oldColumn: col,
                 newRow: targetRow,
                 newColumn: j,
-                cost: c,
+                cost: t,
                 time: t,
             });
         }
@@ -133,7 +133,7 @@ function validateMoves(grid, row, col) {
 
  
 //using validateMoves, returns all moves for all containers (in 1 grid)
-function getMoves(grid){
+export function getMoves(grid){
     var allMoves = [];
     for(var i = 0; i < grid.length; i++){
         for(var j = 0; j < grid[i].length; j++){
@@ -151,7 +151,7 @@ function getMoves(grid){
             }
         }
     }
-
+    //console.log("ALLMOVES: ", allMoves);
     return allMoves
 
 }
@@ -277,8 +277,8 @@ function isSolvable(ship) {
 //in balancing, goal state is a simple equation. each state can be 
 function SIFT (ship){
     console.log("UNSOLVABLE");
-    Sift.operateSift(ship);
-    return [];
+   
+    return Sift.operateSift(ship);;
 }
 
 
@@ -308,6 +308,7 @@ export default function handleBalancing(manifestText) { //A* search
     
     var p = new Problem(ship); 
     var root = new Node(p, null, null, 0); 
+    //console.log("root: ", root)
     frontier.enqueue(root, 0);
 
   
@@ -323,8 +324,9 @@ export default function handleBalancing(manifestText) { //A* search
  
 
         if (checkBalance(weights)) {  //goal reached
+            console.log("balanced: ", currNode);
             solutionPath = currNode.path();
-            //why not return?
+            console.log("path: ", solutionPath);
             break;  
         }
         

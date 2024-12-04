@@ -1,6 +1,6 @@
 import {Problem, Node, processData, hashGrid} from './problem.js'
 import {priorityQueue} from './priority.js'
-
+import {getMoves} from './handleBalancing.js'
 
 //sorts all cargo in the ship
 //returns a sorted list of containers
@@ -61,9 +61,9 @@ export function isSifted(grid, target){
             //console.log(grid[i][j]);
             //console.log(target[i][j]);
             if (grid[i][j].w!= target[i][j].w || grid[i][j].name!= target[i][j].name ){
-                console.log("wrong");
-                console.log(grid[i][j]);
-                console.log(target[i][j]);
+                //console.log("wrong");
+                //console.log(grid[i][j]);
+                //console.log(target[i][j]);
                 return false;
             }
         }
@@ -84,15 +84,22 @@ export function operateSift(ship){
     var p = new Problem(ship); //problem state
     var root = new Node(p, null, null, 0)
     frontier.enqueue(root, 0);
-
+    console.log("root: ", root);
+    let counter = 0;
     while (!frontier.isEmpty()){
-
+        counter+=1;
         var current = frontier.dequeue();
 
-        console.log("current: ", current.problem.grid);
+        //console.log("current: ", current.problem.grid);
+        if (counter <0){
+            console.log("FInish");
+            return null;
+        }
         if (isSifted(current.problem.grid, target)){
-            console.log("SIFTED");
-            return current.problem.grid;
+            console.log("SIFTED: ", current);
+            solutionPath = current.path();
+            console.log("path: ", solutionPath);
+            break;
         }
         //now i need to hash the grid into a key and add it to the visited map.
         var gridHash = hashGrid(current.problem.grid);
@@ -101,16 +108,47 @@ export function operateSift(ship){
             visited.set(gridHash, current.cost);
 
             //now i must get all possible moves, and begin astar tree building.
+            var all_possible_moves_from_current_state =  getMoves(current.problem.grid);
             //cost : time it takes to move, 
             //heuristic : something to do with manhattan distance i think? 
             //like...idk ill add heuristic at the end
+
+            for (var single_container_all_moves of all_possible_moves_from_current_state){
+                for (var move of single_container_all_moves.moves){
+                    
+                    var newGrid = current.problem.getNewGrid(current.problem.grid, move);
+                    var newProblem = new Problem(newGrid);
+                    var newCost = current.cost + move.cost;
+                    var child = new Node(newProblem, current, move, newCost);
+
+                    //put new heuristic here..
+
+                    var priority = newCost;
+
+                    frontier.enqueue(child, priority);
+                }
+            }
         }
 
-        
+
         
     }
+
+    return solutionPath.map((move)=>({
+        ...move,
+        oldRow: move.oldRow + 1,
+        oldColumn: move.oldColumn+1,
+        newRow: move.newRow+1,
+        newColumn: move.newColumn+1
+
+    }));
+
 }
 
+function heuristic(move, grid, goal){
+    //compare the new container.
+
+}
 
 
 //for balancing, new_cost = cost_thus_far + cost to get here

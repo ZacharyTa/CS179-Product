@@ -60,7 +60,7 @@ export function isSifted(grid, target){
         for (let j = 0; j< grid[i].length; j++){
             //console.log(grid[i][j]);
             //console.log(target[i][j]);
-            if (grid[i][j].w!= target[i][j].w || grid[i][j].name!= target[i][j].name ){
+            if (grid[i][j].w!= target[i][j].w){ //only weight matters, name doesnt.
                 //console.log("wrong");
                 //console.log(grid[i][j]);
                 //console.log(target[i][j]);
@@ -73,6 +73,8 @@ export function isSifted(grid, target){
 
 //a* tree creation
 export function operateSift(ship){
+
+    let crane = [9, 0];
     var frontier = new priorityQueue();
     var visited = new Map();
     var solutionPath = [];
@@ -112,7 +114,7 @@ export function operateSift(ship){
             //cost : time it takes to move, 
             //heuristic : something to do with manhattan distance i think? 
             //like...idk ill add heuristic at the end
-
+           
             for (var single_container_all_moves of all_possible_moves_from_current_state){
                 for (var move of single_container_all_moves.moves){
                     
@@ -122,8 +124,9 @@ export function operateSift(ship){
                     var child = new Node(newProblem, current, move, newCost);
 
                     //put new heuristic here..
+                    const h = heuristic(move, newProblem, target);
 
-                    var priority = newCost;
+                    var priority = newCost+h;
 
                     frontier.enqueue(child, priority);
                 }
@@ -147,6 +150,21 @@ export function operateSift(ship){
 
 function heuristic(move, grid, goal){
     //compare the new container.
+    //find move coordinates in goal.
+    let min_distance = Infinity;
+    for (let i = 0; i < goal.length; i++){
+        for (let j =0; j< goal[i].length; j++){
+            if (move.weight == goal[i][j].w){
+                //get distance
+                const distance = Math.abs(move.newColumn - j)+ Math.abs(move.newRow-i);
+                min_distance = Math.min(distance ,min_distance)
+            }
+        }
+    }
+
+    return min_distance;
+
+    
 
 }
 

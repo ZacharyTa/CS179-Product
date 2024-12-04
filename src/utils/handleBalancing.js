@@ -118,6 +118,7 @@ function validateMoves(grid, row, col) {
             moves.push({
                 type: "move",
                 name: grid[row][col].name,
+                weight: grid[row][col].w,
                 oldRow: row,
                 oldColumn: col,
                 newRow: targetRow,

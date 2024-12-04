@@ -1,4 +1,4 @@
-import {priorityQueue, priortyQueue} from './priority.js'
+import {priorityQueue} from './priority.js'
 import {Problem, Node, processData, hashGrid} from './problem.js'
 
 // logic for handling the A* search algo smth
@@ -7,17 +7,81 @@ import {Problem, Node, processData, hashGrid} from './problem.js'
 Goal test: we have two options, goal state where we measure time or goal state we know we reached if it we completed all the operations
 so i believe this goal test will need to be when we run out of operations, then we know we are done, we queue the operations based on costs gn and hn
 */
-function goalTest(ops, operations) {
-    return ops.every(item => operations.includes(item))
+class LoadNode extends Node{
+    constructor(problem, parent, move, cost, ops){
+        super(problem, parent, move, cost);
+        this.ops = ops;
+    }
+
+    getOps(){
+        return this.ops;
+    }
 }
 
-// queuing function or expand node function, find next state with operations 
-function expandNode(curr, ops, operation, frontier, visited) {
-    let ship = curr.problem.grid;
-    
+function goalTest(ops, operations) {
+    return ops.length === operations.length;
+}
+
+//what are some possible moves
+//so we can move every container in the ship plus the containers in the trucks
+//assume all trucks are pulled up
+//lets assume every operation is this, if we find a valid container to move, we can check if it is in our list of operations, if it is in our list of operations 
+//and in the ship grid, we know that this is an unload 
+//we also know in our available moves are all the load operations that have not been done yet
+function isOperation(op, operations){
+    for(let i = 0; i < operations.length; i++){
+        if(op.name === operations[i].name){
+            return true;
+        }
+    }
+    return false;
+}
+
+function getMoves(ship, i, j, operations){
+    console.log(operations[0].name);
+    console.log(ship[i][j].name);
+    if(isOperation(ship[i][j], operations)){
+        // if(ship[i][j].type)
+    }
+    return ship[i][j];
+}
+
+function addOperations(moves, ops, operations) {
+    for (let op in operations){
+        if(!ops.includes(op)){
+            moves.push(op);
+        }
+    }
     return
 }
+// queuing function or expand node function, find next state with operations 
+function expandNode(curr, operations, frontier, visited) {
+    let moves = [];
+    addOperations(moves, curr.ops, operations);
+    let ship = curr.problem.grid;
+    // console.log(ship);
+    for(let i = 0; i < ship.length; i++) {
+        for(let j = 0; j < ship[i].length; j++) {
+            let container = ship[i][j];
+            // console.log(container.name);
+            if(container.name == "NAN" || container.name == "UNUSED") {continue;}
+            if(ship[i+1][j] == "UNUSED") {continue;}
+            moves.push(getMoves(ship, i, j, operations));
+        }
+    }
+    for (let i = 0; i < moves.length; i++) {
+        let cost = getCost;
+        let newNode = new LoadNode(moves[i].problem, moves[i].parent, moves[i].move, moves[i].cost, moves[i].ops);
+        if(!visited.has((newNode, cost))){
+            frontier.enqueue(newNode, cost);
+        }
+    }
+    return;
+}
 
+function getCost(node) {
+    return node.cost;
+}
 //heuristic manhanttan might be able to use balance heuristic function
 function heuristic(state) {
     return 
@@ -57,19 +121,19 @@ export default function handleLoading(manifestText, operations) {
     // ur code here (Remember to record ur screens!)
     let ship = processData(manifestText);
     let problem = new Problem(ship);
-    let root = new Node(problem, null, null, 0);
     const ops = [];
+    let root = new LoadNode(problem, null, null, 0, ops);
     frontier.enqueue(root, 0);
 
     while(!frontier.isEmpty()){
         let curr = frontier.dequeue();
-        let cost = curr.getCost();
-        if(goalTest(ops, operations)){
+        let cost = curr.cost;
+        if(goalTest(curr.getOps(), operations)){
             solutionPath = curr.path();
             break;
         }
         visited.set(curr, cost)
-        expandNode(curr, ops, operations, frontier, visited);
+        expandNode(curr, operations, frontier, visited);
 
     }   
     // --------------------------------------------------
@@ -91,3 +155,107 @@ export default function handleLoading(manifestText, operations) {
         newColumn: move.newColumn + 1,
     }));
 }
+
+let text = `\
+[01,01], {00000}, NAN
+[01,02], {00099}, Cat
+[01,03], {00100}, Dog
+[01,04], {00000}, UNUSED
+[01,05], {00000}, UNUSED
+[01,06], {00000}, UNUSED
+[01,07], {00000}, UNUSED
+[01,08], {00000}, UNUSED
+[01,09], {00000}, UNUSED
+[01,10], {00000}, UNUSED
+[01,11], {00000}, UNUSED
+[01,12], {00000}, NAN
+[02,01], {00000}, UNUSED
+[02,02], {00000}, UNUSED
+[02,03], {00000}, UNUSED
+[02,04], {00000}, UNUSED
+[02,05], {00000}, UNUSED
+[02,06], {00000}, UNUSED
+[02,07], {00000}, UNUSED
+[02,08], {00000}, UNUSED
+[02,09], {00000}, UNUSED
+[02,10], {00000}, UNUSED
+[02,11], {00000}, UNUSED
+[02,12], {00000}, UNUSED
+[03,01], {00000}, UNUSED
+[03,02], {00000}, UNUSED
+[03,03], {00000}, UNUSED
+[03,04], {00000}, UNUSED
+[03,05], {00000}, UNUSED
+[03,06], {00000}, UNUSED
+[03,07], {00000}, UNUSED
+[03,08], {00000}, UNUSED
+[03,09], {00000}, UNUSED
+[03,10], {00000}, UNUSED
+[03,11], {00000}, UNUSED
+[03,12], {00000}, UNUSED
+[04,01], {00000}, UNUSED
+[04,02], {00000}, UNUSED
+[04,03], {00000}, UNUSED
+[04,04], {00000}, UNUSED
+[04,05], {00000}, UNUSED
+[04,06], {00000}, UNUSED
+[04,07], {00000}, UNUSED
+[04,08], {00000}, UNUSED
+[04,09], {00000}, UNUSED
+[04,10], {00000}, UNUSED
+[04,11], {00000}, UNUSED
+[04,12], {00000}, UNUSED
+[05,01], {00000}, UNUSED
+[05,02], {00000}, UNUSED
+[05,03], {00000}, UNUSED
+[05,04], {00000}, UNUSED
+[05,05], {00000}, UNUSED
+[05,06], {00000}, UNUSED
+[05,07], {00000}, UNUSED
+[05,08], {00000}, UNUSED
+[05,09], {00000}, UNUSED
+[05,10], {00000}, UNUSED
+[05,11], {00000}, UNUSED
+[05,12], {00000}, UNUSED
+[06,01], {00000}, UNUSED
+[06,02], {00000}, UNUSED
+[06,03], {00000}, UNUSED
+[06,04], {00000}, UNUSED
+[06,05], {00000}, UNUSED
+[06,06], {00000}, UNUSED
+[06,07], {00000}, UNUSED
+[06,08], {00000}, UNUSED
+[06,09], {00000}, UNUSED
+[06,10], {00000}, UNUSED
+[06,11], {00000}, UNUSED
+[06,12], {00000}, UNUSED
+[07,01], {00000}, UNUSED
+[07,02], {00000}, UNUSED
+[07,03], {00000}, UNUSED
+[07,04], {00000}, UNUSED
+[07,05], {00000}, UNUSED
+[07,06], {00000}, UNUSED
+[07,07], {00000}, UNUSED
+[07,08], {00000}, UNUSED
+[07,09], {00000}, UNUSED
+[07,10], {00000}, UNUSED
+[07,11], {00000}, UNUSED
+[07,12], {00000}, UNUSED
+[08,01], {00000}, UNUSED
+[08,02], {00000}, UNUSED
+[08,03], {00000}, UNUSED
+[08,04], {00000}, UNUSED
+[08,05], {00000}, UNUSED
+[08,06], {00000}, UNUSED
+[08,07], {00000}, UNUSED
+[08,08], {00000}, UNUSED
+[08,09], {00000}, UNUSED
+[08,10], {00000}, UNUSED
+[08,11], {00000}, UNUSED
+[08,12], {00000}, UNUSED`;
+let shipGrid = processData(text);
+let testOperations = [
+    {type: "onload", name: "Dog"},
+    {type: "onload", name: "Cat"},
+    ]
+handleLoading(text, testOperations)

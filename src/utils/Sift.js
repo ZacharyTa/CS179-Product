@@ -1,6 +1,6 @@
 import {Problem, Node, processData, hashGrid} from './problem.js'
 import {priorityQueue} from './priority.js'
-import {getMoves} from './handleBalancing.js'
+import {getMoves, findTime} from './handleBalancing.js'
 
 //sorts all cargo in the ship
 //returns a sorted list of containers
@@ -74,7 +74,7 @@ export function isSifted(grid, target){
 //a* tree creation
 export function operateSift(ship){
 
-    let crane = [9, 0];
+ 
     var frontier = new priorityQueue();
     var visited = new Map();
     var solutionPath = [];
@@ -84,7 +84,7 @@ export function operateSift(ship){
 
 
     var p = new Problem(ship); //problem state
-    var root = new Node(p, null, null, 0)
+    var root = new Node(p, null, null, 0, null);
     frontier.enqueue(root, 0);
     console.log("root: ", root);
     let counter = 0;
@@ -93,14 +93,36 @@ export function operateSift(ship){
         var current = frontier.dequeue();
 
         //console.log("current: ", current.problem.grid);
-        if (counter <0){
-            console.log("FInish");
-            return null;
-        }
+
+
         if (isSifted(current.problem.grid, target)){
             console.log("SIFTED: ", current);
+
             solutionPath = current.path();
+
+            var lastElement = {"newRow":9, "newColumn":1};
+            if (solutionPath.length >0){ //if not empty
+                lastElement = solutionPath[solutionPath.length - 1];
+                console.log("solution path 1 : ", lastElement);
+            }
+            
+            console.log("sol 0: ", lastElement);
+
+
             console.log("path: ", solutionPath);
+
+            var end = Math.abs(8 - lastElement.newRow) + Math.abs(0 - lastElement.newColumn);
+            solutionPath.push({
+                type:"move",
+                name: "crane",
+                oldRow: lastElement.newRow,
+                oldColumn: lastElement.newColumn,
+                newRow: 8,
+                newColumn: 0,
+                time: end,
+                cost: 0, //removing 
+            })
+
             break;
         }
         //now i need to hash the grid into a key and add it to the visited map.
@@ -120,8 +142,45 @@ export function operateSift(ship){
                     
                     var newGrid = current.problem.getNewGrid(current.problem.grid, move);
                     var newProblem = new Problem(newGrid);
-                    var newCost = current.cost + move.cost;
-                    var child = new Node(newProblem, current, move, newCost);
+
+                    var craneTime = 0;
+                    var craneMove = null;
+
+                    //INIT POSITION
+                    if (current.cost === 0){ //when crane should start at initial position 
+                        //since from top, just manhattan distance
+                        craneTime = Math.abs(8 - move.oldRow) + Math.abs(0 - move.oldColumn);
+                        craneMove = {
+                            type: "move",
+                            name: "crane",
+                            oldRow: 8, //will print 9 instead
+                            oldColumn: 0, 
+                            newRow: move.oldRow, 
+                            newColumn: move.oldColumn,
+                            time: craneTime
+                        };
+                    } 
+                    else{ //Creates a crane movement instruction inbetween crate instructions
+
+                        var mm = current.getMove();
+                        var cm = current.getCraneMove();
+                        //oly compute crane if mm.name != cm Move name! (container changes)
+                        if ( !cm || cm.name !== mm.name && (mm.newRow !== move.oldRow || mm.newColumn !== move.oldColumn)) {
+                            craneTime =  findTime(newGrid, mm.newRow, mm.newColumn, move.oldRow, move.oldColumn);
+                            craneMove = {
+                                type: "move",
+                                name: "crane",
+                                oldRow: mm.newRow, 
+                                oldColumn: mm.newColumn, 
+                                newRow: move.oldRow, 
+                                newColumn: move.oldColumn,
+                                time: craneTime
+                            };
+                        } 
+                    }
+
+                    var newCost = current.cost + move.cost + craneTime;
+                    var child = new Node(newProblem, current, move, newCost, craneMove);
 
                     //put new heuristic here..
                     const h = heuristic(move, newProblem, target);

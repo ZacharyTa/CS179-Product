@@ -45,7 +45,7 @@ function checkBalance(weights) {
 
 
 //find time between 2 points, with takng obstacles into mind
-function findTime(grid, r, c, i ,j){
+export function findTime(grid, r, c, i ,j){
     //directions
     var dir = [ {row: 1, col: 0 },
                 {row: -1, col: 0},
@@ -304,6 +304,7 @@ export default function handleBalancing(manifestText) {
                 time: end,
                 cost: 0, //removing 
             })
+            
             break;  
         }
         

@@ -2,17 +2,20 @@
 class Problem{
     
     // constructor(ship, buffer){
-    constructor(ship){        
+    constructor(ship, bufferZone, bufferStatus){        
         this.grid = ship;
-        //this.buffer = buffer; //might remove this, not sure yet, if so will also delete setBuffer() & bufferEmpty()
-        // this.time = time; this will be stored with Node instead
+        this.buffer = bufferZone; 
+        this.bufferStatus = bufferStatus; 
     }
 
-    // setTime(time) { this.time = time;}
-    getGrid(){return this.grid;}
-    getTime(){return this.time;}
+    bufferEmpty(){return this.bufferStatus;} 
+    setBufferStatus(s){this.bufferStatus = s;}
 
-    //function to return a grid with a new move; 
+
+    getGrid(){return this.grid;}
+    getBugger(){return this.buffer}
+
+    //function to return a grid with a new move; (used for either buffer or grid)
     getNewGrid(grid, move){
         var newGrid = grid.map(row =>row.map(cell => ({...cell})));
 
@@ -24,26 +27,32 @@ class Problem{
 
     }
 
+    //if crossing between buffer and grid (need to modify getNewGrid)
 
-    setBuffer(nex, newY, name){}
-    bufferEmpty(){}; //returns true if nothing is in the buffer
 }
+
+
+
+
 
 //Node structure 
 class Node{
 
-    constructor(problem, parent, move, cost, craneMove){
+    constructor(problem, parent, move, cost, craneMove, bufferSpace, bufferMove){
         this.problem = problem;         
         this.parent = parent; 
         this.move = move,
         this.cost = cost;
-        this.craneMove = craneMove //only if the containers are different
+        this.craneMove = craneMove; //only if the containers are different
                                     //else pass [] (gets taken care of in path())
+        this.bufferSpace = bufferSpace;
+        this.bufferMove = bufferMove;
         
     }
 
     getCraneMove (){ return this.craneMove;}
     getMove(){return this.move; }
+    getBufferMove(){return this.bufferMove}
 
 
     path() {
@@ -61,6 +70,13 @@ class Node{
                 path.unshift(currNode.craneMove);
             }
     
+
+
+            //add buffer move
+            if (currNode.bufferMove != null && !isNaN(currNode.bufferMove.newRow) && !isNaN(currNode.bufferMove.newColumn)) {
+                path.unshift(currNode.craneMove);
+            }
+
             currNode = currNode.parent;
         }
     

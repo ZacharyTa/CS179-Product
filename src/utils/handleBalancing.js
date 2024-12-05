@@ -10,6 +10,13 @@ import {priorityQueue} from './priority.js'
  * bufferzone: reflect over x axis, EX: most right bottom corner" (1,-1)
  */
 
+
+//global var
+//if enable = true, check buffer locations
+var enable = false;
+
+
+
 //calculate weights, and return them
 function calc_weights(grid){
     var left_weight = 0;
@@ -78,7 +85,7 @@ function findTime(grid, r, c, i ,j){
 
 
 //simply returns valid moves for 1 container
-function validateMoves(grid, row, col) { 
+function validateMoves(grid, row, col, buffer) { 
     var moves = []; 
 
     for (var j = 0; j < grid[0].length; j++) {
@@ -111,31 +118,77 @@ function validateMoves(grid, row, col) {
                 time: t,
             });
         }
+
+    }
+
+    var bufferMoves = [];
+    if(enable === true){
+        bufferMoves = getBufferMoves(grid,buffer, row, col); //need to determine if these coords are
+                                                             //in grid or in buffer first
+    }
+
+    if(bufferMoves.length !== 0){
+        moves.push(...bufferMoves);
     }
 
     return moves;
 }
 
- 
-//using validateMoves, returns all moves for all containers (in 1 grid)
-function getMoves(grid){
-    var allMoves = [];
-    for(var i = 0; i < grid.length; i++){
-        for(var j = 0; j < grid[i].length; j++){
-            const container = grid[i][j];
-            if(container && grid[i][j].name !== "NAN" && grid[i][j].name !== "UNUSED" ){
-                var no_containerTop = i === grid.length - 1 || grid[i+1][j].name === "UNUSED";
+function getBufferMoves(grid,buffer, row, col){ //called inside validate moves, might need to split up, idk
+    return [];
+}
 
-                if(no_containerTop){
-                    allMoves.push({ moves: validateMoves(grid, i, j)} )
-                }
-            }
-        }
-    }
-    return allMoves
+function movesToBuffer(currNode, i , j){ //i, j is the container loc thats currently inside SHIP grid
+    return [];
 
 }
 
+function movesFromBuffer(currNode, i, j){//i, j is container loc thats currently inside BUFFER grid
+    return [];
+}
+
+
+
+ 
+//using validateMoves, returns all moves for all containers (in 1 grid)
+function getMoves(currNode){ 
+
+    var grid = currNode.problem.grid;
+    var buffer = currNode.problem.buffer;
+    var allMoves = [];
+ 
+        //for all moves starting in the grid
+        for(var i = 0; i < grid.length; i++){
+            for(var j = 0; j < grid[i].length; j++){
+                const container = grid[i][j];
+                if(container && grid[i][j].name !== "NAN" && grid[i][j].name !== "UNUSED" ){
+                    var no_containerTop = i === grid.length - 1 || grid[i+1][j].name === "UNUSED";
+
+                    if(no_containerTop){
+                        allMoves.push({ moves: validateMoves(grid, i, j)} )
+
+                        //generate moves for buffer if enabled (going from grid to buffer)
+                        if(enable === true){
+                            allMoves.push({ moves: movesToBuffer(currNode, i, j)} )
+                        }
+                    }
+                }
+            }
+        }
+
+        //IF ENABLE === TRUE
+        //get moves from inside buffer to grid
+        if (enable === true){
+            for(var i = 0; i < buffer.length; i++){
+                for (var j = 0; j < buffer[i].length; j++){
+                    allMoves.push({ moves: movesFromBuffer(currNode, i, j)} )
+                }
+            }
+        }
+
+    return allMoves
+
+}
 
 
 
@@ -191,6 +244,13 @@ function isSolvable(ship){
     //if only 1 container, call sift
     if (weights.length === 1){ return false;}
 
+
+    //inside solvable determine if buffer space should be considered
+    //if about half of the location of the ship grid is full, enable
+    if(weights.length > 50 ){
+        enable = true;
+    }
+
     var totalWeightHalf = Math.floor(totalWeight/2);
     var dp = Array(totalWeightHalf + 1).fill(false);
     dp[0] = true; //since 0 weight always poss
@@ -227,6 +287,12 @@ function SIFT (ship){ //for the sake of testing that it returns []
 //h(n) -> estimated cost of time to reach goal 
 export default function handleBalancing(manifestText) { 
 
+    /**
+     * on the chance that buffer space is enable
+     */
+    var buffer = Array.from({length: 4}, ()=> new Array(24).fill("UNUSED")); 
+
+
     var frontier = new priorityQueue();   //frontier for A*
     var visited = new Map();              //keep track of visited nodes
     var solutionPath = [];
@@ -245,12 +311,12 @@ export default function handleBalancing(manifestText) {
         solutionPath = SIFT(ship);
         return solutionPath;
     }
+    console.log("enable status: ", enable);
 
 
-    //ship is solvable, start A*
-
+    // constructor(problem, parent, move, cost, craneMove, bufferSpace, bufferMove)
     var p = new Problem(ship); 
-    var root = new Node(p, null, null, 0, null); //last null --> crane move
+    var root = new Node(p, null, null, 0, null, bufferSpace, null);
     frontier.enqueue(root, 0);
 
 
@@ -283,7 +349,7 @@ export default function handleBalancing(manifestText) {
             visited.set(gridHash, currNode.cost); 
 
             //get possible moves
-            var moves = getMoves(currNode.problem.grid)
+            var moves = getMoves(currNode)
             // console.log("moves for expanded node: ", moves)
 
 

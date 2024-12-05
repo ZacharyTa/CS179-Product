@@ -1,4 +1,3 @@
-
 //class to represent Problem states (tree structure)
 class Problem{
     
@@ -30,28 +29,44 @@ class Problem{
     bufferEmpty(){}; //returns true if nothing is in the buffer
 }
 
-
 //Node structure 
 class Node{
 
-    constructor(problem, parent, move, cost){
-        this.problem = problem;         //the grid
+    constructor(problem, parent, move, cost, craneMove){
+        this.problem = problem;         
         this.parent = parent; 
         this.move = move,
         this.cost = cost;
+        this.craneMove = craneMove //only if the containers are different
+                                    //else pass [] (gets taken care of in path())
+        
     }
 
+    getCraneMove (){ return this.craneMove;}
+    getMove(){return this.move; }
 
-    path(){
+
+    path() {
         const path = [];
-        var currNode = this;
-        while (currNode.parent != null){
-            path.unshift(currNode.move) //adding to path
+        let currNode = this;
+    
+        //add container move
+        while (currNode.parent != null) {
+            if (currNode.move != null && !isNaN(currNode.move.newRow) && !isNaN(currNode.move.newColumn)) {
+                path.unshift(currNode.move);
+            }
+    
+            //add crane move
+            if (currNode.craneMove != null && !isNaN(currNode.craneMove.newRow) && !isNaN(currNode.craneMove.newColumn)) {
+                path.unshift(currNode.craneMove);
+            }
+    
             currNode = currNode.parent;
         }
-
+    
         return path;
     }
+    
 
 }
 
@@ -68,7 +83,6 @@ function hashGrid(grid) {
     }
     return stringToHash(hash);
 }
-
 
 function stringToHash(str) {
     var hash = 0;

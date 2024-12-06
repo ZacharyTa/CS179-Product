@@ -19,8 +19,6 @@ class LoadNode extends Node{
 }
 
 function goalTest(ops, operations) {
-    console.log(ops.length);
-    console.log(operations.length);
     return ops.length === operations.length;
 }
 
@@ -32,7 +30,9 @@ function goalTest(ops, operations) {
 //we also know in our available moves are all the load operations that have not been done yet
 function isOperation(op, operations){
     for(let i = 0; i < operations.length; i++){
-        if(op.name === operations[i].name && operations.type == "offload"){
+        // console.log(op.name);
+        // console.log(operations[i].name);
+        if(op.name === operations[i].name && operations[i].type == "offload"){
             return [operations[i], true];
         }
     }
@@ -66,17 +66,28 @@ function findOpenCells(ship){
     return openCells;
 }
 
+function targetBelow(ship, row, col, operations) {
+    for(let i = row; i >= 0; i-- ){
+        console.log(isOperation(ship[i][col], operations)[1]);
+        console.log(ship[i][col]);
+        if(isOperation(ship[i][col], operations)[1]){
+            console.log("true");
+            return true;
+        }
+    }
+    return false;
+}
+
 function addMoves(parent, moves, ship, i, j, operations){
     let check = isOperation(ship[i][j], operations); 
     let isOp = check[1];
-
     if(isOp){
         // console.log(type);
-        console.log("we made it");
         let op = check[0];
         let type = op.type;
         if(type == "offload"){
             let newOps = Array.from(parent.ops);
+            let dist = Math.abs(9-i) + Math.abs(0 - (j + 1)) + 2;
             let m = {
                 type: "offload",
                 name: op.name,
@@ -86,7 +97,6 @@ function addMoves(parent, moves, ship, i, j, operations){
                 newRow: -1,
                 newColumn: -1,
             };
-            let dist = Math.abs(9-i) + Math.abs(0 - (j + 1)) + 2;
             let newGrid = ship.map(row =>row.map(cell => ({...cell})));
             newGrid[i][j] = {w: 0, name: "UNUSED"};
             let problem = new Problem(newGrid);
@@ -96,37 +106,36 @@ function addMoves(parent, moves, ship, i, j, operations){
                 problem: problem,
                 parent: parent,
                 ops: newOps,
-                cost: dist + getCost(parent),
+                cost: dist + getCost(parent, operations),
             })
         }
-    }else {
-        // let open = findOpenCells(ship);
-        // for(let k = 0; k < open.length; k++){
-        //     let row = open[k][0];
-        //     let col = open[k][1];
-        //     let temp = Array.from(ship);
-        //     let w = 0;
-        //     let name = ship[i][j].name;
-        //     temp[row][col] = {w, name};
-        //     let problem = new Problem(temp);
-        //     let dist = Math.abs(row - i) + Math.abs(col - j);
-        //     let newOps = Array.from(parent.ops);
-        //     moves.push({
-        //         move: {
-        //             type: "move",
-        //             name: name,
-        //             time: dist,
-        //             oldRow: i,
-        //             oldColumn: j,
-        //             newRow: row,
-        //             newColumn: col,
-        //         },
-        //         problem: problem,
-        //         parent: parent,
-        //         ops: newOps,
-        //         cost: dist + getCost(parent),
-        //     })
-        // }
+    }else if(targetBelow(ship, i, j, operations)){
+        let newOps = Array.from(parent.ops);
+        let open = findOpenCells(ship);
+        for(let k = 0; k < open.length; k++){
+            let row = open[k][0];
+            let col = open[k][1];
+            let n = ship[i][j].name;
+            let dist = Math.abs(row - i) + Math.abs(col - j);
+            let m = {
+                type: "move",
+                name: n,
+                time: dist,
+                oldRow: i,
+                oldColumn: j,
+                newRow: row,
+                newColumn: col,
+            };
+            let newGrid = parent.problem.getNewGrid(ship, m);
+            let newProblem = new Problem(newGrid);
+            moves.push({
+                move: m,
+                problem: newProblem,
+                parent: parent,
+                ops: newOps,
+                cost: dist + getCost(parent, operations),
+            })
+        }
     }
     return;
 }
@@ -171,7 +180,7 @@ function addOperations(parent, moves, ship, ops, operations) {
                     problem: problem,
                     parent: parent,
                     ops: newOps,
-                    cost: dist + getCost(parent),
+                    cost: dist + getCost(parent, operations),
                 });
             }
         }
@@ -189,29 +198,51 @@ function expandNode(curr, operations, frontier, visited) {
         for(let j = 0; j < ship[i].length; j++) {
             let container = ship[i][j];
             if(container.name === 'NAN' || container.name === 'UNUSED') {continue;}
+            if(i != ship.length - 1 && ship[i+1][j].name != "UNUSED"){continue;}
             addMoves(curr, moves, ship, i, j, operations);
         }
     }
     for (let i = 0; i < moves.length; i++) {
+        console.log(moves.length);
+        console.log(operations);
         let newNode = new LoadNode(moves[i].problem, moves[i].parent, moves[i].move, moves[i].cost, moves[i].ops);
-        console.log(`when making new node length of ops: ${newNode.getOps().length}`);
-        let cost = getCost(newNode);
-        let hash = hashGrid(newNode.problem.grid)
-        console.log(`has been visited: ${visited.has(hash)}`);
-        if(!visited.has((hash, cost))){
-            frontier.enqueue(newNode, cost);
+        let hash = hashGrid(newNode.problem.grid);
+        console.log("add");
+        if(!visited.has(hash) || visited.get(hash) > newNode.cost){
+            frontier.enqueue(newNode, newNode.cost);
         }
     }
     return;
 }
 
-function getCost(node) {
-    return node.cost;
+function getCost(node, operations) {
+    return node.cost + heuristic(node, operations);
 }
 //heuristic manhanttan might be able to use balance heuristic function
-function heuristic(node) {
-
-    return 
+function findContainer(grid, op) {
+    // console.log(grid[0]);
+    for(let i = grid.length - 1; i >= 0; i-- ) {
+        for (let j = 0; j < grid[i].length; j++){
+            if(grid[i][j].name == op.name){
+                return [i, j];
+            }
+        }
+    }
+    return [-1, -1];
+}
+function heuristic(node, operations) {
+    let h = 0;
+    let nodeOps = node.getOps();
+    for(let i = 0; i < operations.length; i++){
+        if(!nodeOps.includes(operations[i])){
+            let coords = findContainer(node.problem.grid, operations);
+            let row = coords[0];
+            let col = coords[1];
+            let dist = Math.abs(9 - row) + Math.abs(0 - col);
+            h += dist;
+        }
+    }
+    return h;
 }
 //f(n) = g(n) + h(n);
 //g(n) -> current time
@@ -255,12 +286,11 @@ export default function handleLoading(manifestText, operations) {
     while(!frontier.isEmpty()){
 
         curr = frontier.dequeue();
-        let cost = getCost(curr);
         if(goalTest(curr.getOps(), operations)){
             solutionPath = curr.path();
             break;
         }
-        visited.set((hashGrid(curr.problem.grid), cost));
+        visited.set(hashGrid(curr.problem.grid), curr.cost);
         // console.log(visited);
         expandNode(curr, operations, frontier, visited);
 
@@ -386,9 +416,9 @@ let text = `\
 [08,11], {00000}, UNUSED
 [08,12], {00000}, UNUSED`;
 let testOperations = [
-    {type: "offload", name: "Rat"},
-    // {type: "onload", name: "Bat"},
-    // {type: "offload", name: "Cow"},
+    {type: "onload", name: "Bat"},
+    {type: "onload", name: "Rat"},
+    {type: "offload", name: "Cow"},
     ];
 let testRes = handleLoading(text, testOperations);
 console.log(testRes);

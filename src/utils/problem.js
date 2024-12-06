@@ -2,14 +2,14 @@
 class Problem{
     
     // constructor(ship, buffer){
-    constructor(ship, bufferZone, bufferStatus){        
+    constructor(ship, bufferZone){        
         this.grid = ship;
         this.buffer = bufferZone; 
-        this.bufferStatus = bufferStatus; 
     }
 
-    bufferEmpty(){return this.bufferStatus;} 
-    setBufferStatus(s){this.bufferStatus = s;}
+    bufferEmpty(){
+        return this.buffer.every(row => row.every(cell => cell === "UNUSED"))
+    } 
 
 
     getGrid(){return this.grid;}
@@ -38,14 +38,13 @@ class Problem{
 //Node structure 
 class Node{
 
-    constructor(problem, parent, move, cost, craneMove, bufferSpace, bufferMove){
+    constructor(problem, parent, move, cost, craneMove, bufferMove){
         this.problem = problem;         
         this.parent = parent; 
         this.move = move,
         this.cost = cost;
         this.craneMove = craneMove; //only if the containers are different
                                     //else pass [] (gets taken care of in path())
-        this.bufferSpace = bufferSpace;
         this.bufferMove = bufferMove;
         
     }

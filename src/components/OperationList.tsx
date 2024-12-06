@@ -9,6 +9,7 @@ import {
   setCurrentOperationIndex,
 } from "@/utils/operationCookies";
 import FinishModal from "@/components/FinishModal";
+import ConfirmModal from "@/components/ConfirmModal";
 import { removeAllCookies } from "@/utils/removeAllCookies";
 import { useRouter } from "next/navigation";
 import { getSelection } from "@/utils/selectionCookies";
@@ -34,6 +35,7 @@ const OperationList: React.FC<OperationListProps> = ({
   const [currentIndex, setCurrentIndex] = useState(getCurrentOperationIndex());
   const cardRef = useRef<(HTMLDivElement | null)[]>([]);
   const [isFinishModalOpen, setIsFinishModalOpen] = useState(false);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const router = useRouter();
 
   const handleNext = () => {
@@ -64,9 +66,13 @@ const OperationList: React.FC<OperationListProps> = ({
   };
 
   const handleDone = () => {
-    // clear all cookies
+    setIsConfirmModalOpen(true);
+  };
+
+  const handleConfirmDone = () => {
     removeAllCookies();
     setIsFinishModalOpen(false);
+    setIsConfirmModalOpen(false);
     router.push("/manifest-upload");
   };
 
@@ -176,10 +182,17 @@ const OperationList: React.FC<OperationListProps> = ({
         )}
         <FinishModal
           title="Cargo Loading Complete"
-          body="Please make sure to download and sent Manifest Outbound to captain before closing."
+          body="Please make sure to download and send Manifest Outbound to captain before pressing Done."
           isOpen={isFinishModalOpen}
           onDownload={handleDownload}
           onDone={handleDone}
+        />
+        <ConfirmModal
+          title="Confirm Done"
+          body="Are you sure you are done?"
+          isOpen={isConfirmModalOpen}
+          onConfirm={handleConfirmDone}
+          onCancel={() => setIsConfirmModalOpen(false)}
         />
       </div>
     </div>

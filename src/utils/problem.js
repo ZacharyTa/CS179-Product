@@ -16,7 +16,6 @@ class Problem{
     //function to return a grid with a new move; 
     getNewGrid(grid, move){
         var newGrid = grid.map(row =>row.map(cell => ({...cell})));
-
         var container = newGrid[move.oldRow][move.oldColumn];
         newGrid[move.oldRow][move.oldColumn] = {name: "UNUSED", w: 0}; //old spot should now be unused
         newGrid[move.newRow][move.newColumn]= container;

@@ -19,6 +19,8 @@ class LoadNode extends Node{
 }
 
 function goalTest(ops, operations) {
+    console.log(ops.length);
+    console.log(operations.length);
     return ops.length === operations.length;
 }
 
@@ -30,7 +32,7 @@ function goalTest(ops, operations) {
 //we also know in our available moves are all the load operations that have not been done yet
 function isOperation(op, operations){
     for(let i = 0; i < operations.length; i++){
-        if(op.name === operations[i].name){
+        if(op.name === operations[i].name && operations.type == "offload"){
             return [operations[i], true];
         }
     }
@@ -70,65 +72,107 @@ function addMoves(parent, moves, ship, i, j, operations){
 
     if(isOp){
         // console.log(type);
+        console.log("we made it");
         let op = check[0];
         let type = op.type;
         if(type == "offload"){
-            ship[i][j] = "UNUSED";
-            let problem = new Problem(ship);
-            let newOps = parent.ops;
+            let newOps = Array.from(parent.ops);
+            let m = {
+                type: "offload",
+                name: op.name,
+                time: dist,
+                oldRow: i,
+                oldColumn: j,
+                newRow: -1,
+                newColumn: -1,
+            };
             let dist = Math.abs(9-i) + Math.abs(0 - (j + 1)) + 2;
+            let newGrid = ship.map(row =>row.map(cell => ({...cell})));
+            newGrid[i][j] = {w: 0, name: "UNUSED"};
+            let problem = new Problem(newGrid);
             newOps.push(check[0]);
             moves.push({
-                move: {
-                    type: "offload",
-                    name: ship[i][j].name,
-                    time: dist,
-                    oldRow: i,
-                    oldCol: j,
-                    newRow: -1,
-                    newCol: -1,
-                },
+                move: m,
                 problem: problem,
                 parent: parent,
                 ops: newOps,
-                cost: dist,
+                cost: dist + getCost(parent),
             })
         }
+    }else {
+        // let open = findOpenCells(ship);
+        // for(let k = 0; k < open.length; k++){
+        //     let row = open[k][0];
+        //     let col = open[k][1];
+        //     let temp = Array.from(ship);
+        //     let w = 0;
+        //     let name = ship[i][j].name;
+        //     temp[row][col] = {w, name};
+        //     let problem = new Problem(temp);
+        //     let dist = Math.abs(row - i) + Math.abs(col - j);
+        //     let newOps = Array.from(parent.ops);
+        //     moves.push({
+        //         move: {
+        //             type: "move",
+        //             name: name,
+        //             time: dist,
+        //             oldRow: i,
+        //             oldColumn: j,
+        //             newRow: row,
+        //             newColumn: col,
+        //         },
+        //         problem: problem,
+        //         parent: parent,
+        //         ops: newOps,
+        //         cost: dist + getCost(parent),
+        //     })
+        // }
     }
     return;
 }
 
+function printOps(ops) {
+    let op = "";
+    for (let i = 0; i < ops.length; i++){
+        op += ops[i].name + " ";
+    }
+    return op
+}
 function addOperations(parent, moves, ship, ops, operations) {
     for (let i = 0; i < operations.length; i++){
         if(!ops.includes(operations[i]) && operations[i].type == "onload"){
+            console.log(ops);
+            console.log(`current operation selected: ${operations[i].name}`);
             // addMoves(parent, moves, ship, 9, 1, operations);
-            let newOps = parent.ops;
+            let newOps = Array.from(ops);
             newOps.push(operations[i]);
+            console.log(`current length after push: ${newOps.length}`)
+            console.log(`current ops list: ${printOps(newOps)}`);
+            console.log(`parent node: ${parent.cost}`);
             let open = findOpenCells(ship);
             for(let k = 0; k < open.length; k++) {
                 let row = open[k][0];
                 let col = open[k][1];
-                let temp = ship;
-                let problem = new Problem(ship);
-                let dist = Math.abs(row - 9) + Math.abs(col - 0) + 2;
-                let w = 0;
-                let name = operations[i].name;
-                temp[row][col] = {w, name};
+                let dist = Math.abs(row - 9) + Math.abs(col - 0) + 4;
+                let m = {
+                    type: "onload",
+                    name: operations[i].name,
+                    time: dist,
+                    oldRow: -1,
+                    oldColumn: -1,
+                    newRow: row,
+                    newColumn: col,
+                }
+                let newGrid = ship.map(row =>row.map(cell => ({...cell})));
+                newGrid[m.newRow][m.newColumn] = {w: 0, name: m.name};
+                let problem = new Problem(newGrid);
                 moves.push({
-                    move: {
-                        type: "onload",
-                        name: operations[i].name,
-                        time: dist,
-                        oldRow: -1,
-                        oldCol: -1,
-                        newRow: row,
-                        newCol: col,
-                    },
+                    move: m,
                     problem: problem,
                     parent: parent,
                     ops: newOps,
-                    cost: dist,
-                })
+                    cost: dist + getCost(parent),
+                });
             }
         }
     }
@@ -149,10 +193,12 @@ function expandNode(curr, operations, frontier, visited) {
         }
     }
     for (let i = 0; i < moves.length; i++) {
-        // console.log(moves[i]);
         let newNode = new LoadNode(moves[i].problem, moves[i].parent, moves[i].move, moves[i].cost, moves[i].ops);
+        console.log(`when making new node length of ops: ${newNode.getOps().length}`);
         let cost = getCost(newNode);
-        if(!visited.has((newNode, cost))){
+        let hash = hashGrid(newNode.problem.grid)
+        console.log(`has been visited: ${visited.has(hash)}`);
+        if(!visited.has((hash, cost))){
             frontier.enqueue(newNode, cost);
         }
     }
@@ -163,7 +209,8 @@ function getCost(node) {
     return node.cost;
 }
 //heuristic manhanttan might be able to use balance heuristic function
-function heuristic(state) {
+function heuristic(node) {
+
     return 
 }
 //f(n) = g(n) + h(n);
@@ -204,15 +251,17 @@ export default function handleLoading(manifestText, operations) {
     const ops = [];
     let root = new LoadNode(problem, null, null, 0, ops);
     frontier.enqueue(root, 0);
-
+    let curr;
     while(!frontier.isEmpty()){
-        let curr = frontier.dequeue();
-        let cost = curr.cost;
+
+        curr = frontier.dequeue();
+        let cost = getCost(curr);
         if(goalTest(curr.getOps(), operations)){
             solutionPath = curr.path();
             break;
         }
-        visited.set(curr, cost)
+        visited.set((hashGrid(curr.problem.grid), cost));
+        // console.log(visited);
         expandNode(curr, operations, frontier, visited);
 
     }   
@@ -227,30 +276,33 @@ export default function handleLoading(manifestText, operations) {
     // {type: "offload", name: "Beans", time: 12, oldRow: 1, oldColumn: 5, newRow: 0, newColumn: 0}, // Offload: Set newRow/newColumn to 0
     // {type: "onload", name: "Dog", time: 4, oldRow: 0, oldColumn: 0, newRow: 1, newColumn: 8}, // Onload: set oldRow/oldColumn to 0
     // ....]
+    if(solutionPath.length == 0){
+        console.log("none found");
+    }
     return solutionPath.map((move)=> ({
         ...move,
         oldRow: move.oldRow + 1,
-        oldCol: move.oldCol + 1,
+        oldColumn: move.oldColumn = 1,
         newRow: move.newRow + 1,
-        newCol: move.newCol + 1,
+        newColumn: move.newColumn + 1,
     }));
 }
 
 let text = `\
-[01,01], {00000}, NAN
-[01,02], {00000}, NAN
-[01,03], {00000}, NAN
-[01,04], {00120}, Ram
+[01,01], {10001}, Ewe
+[01,02], {00500}, Cow
+[01,03], {00600}, Dog
+[01,04], {00100}, Rat
 [01,05], {00000}, UNUSED
 [01,06], {00000}, UNUSED
 [01,07], {00000}, UNUSED
 [01,08], {00000}, UNUSED
-[01,09], {00035}, Owl
-[01,10], {00000}, NAN
-[01,11], {00000}, NAN
-[01,12], {00000}, NAN
-[02,01], {00000}, NAN
-[02,02], {00050}, Dog
+[01,09], {00000}, UNUSED
+[01,10], {00000}, UNUSED
+[01,11], {00000}, UNUSED
+[01,12], {00000}, UNUSED
+[02,01], {09041}, Cat
+[02,02], {00010}, Doe
 [02,03], {00000}, UNUSED
 [02,04], {00000}, UNUSED
 [02,05], {00000}, UNUSED
@@ -260,8 +312,8 @@ let text = `\
 [02,09], {00000}, UNUSED
 [02,10], {00000}, UNUSED
 [02,11], {00000}, UNUSED
-[02,12], {00000}, NAN
-[03,01], {00040}, Cat
+[02,12], {00000}, UNUSED
+[03,01], {00000}, UNUSED
 [03,02], {00000}, UNUSED
 [03,03], {00000}, UNUSED
 [03,04], {00000}, UNUSED
@@ -333,9 +385,10 @@ let text = `\
 [08,10], {00000}, UNUSED
 [08,11], {00000}, UNUSED
 [08,12], {00000}, UNUSED`;
-let shipGrid = processData(text);
 let testOperations = [
-    {type: "onload", name: "Bat"},
+    {type: "offload", name: "Rat"},
+    // {type: "onload", name: "Bat"},
+    // {type: "offload", name: "Cow"},
     ];
 let testRes = handleLoading(text, testOperations);
 console.log(testRes);

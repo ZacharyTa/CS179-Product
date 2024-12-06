@@ -79,6 +79,20 @@ function targetBelow(ship, row, col, operations) {
     return false;
 }
 
+function findObstacles(ship, row, col, newCol){
+    let dir = col > newCol ? -1 : 1;
+    console.log(dir);
+    for (let i = row; i < ship.length; i++){
+        console.log(dir);
+        console.log(ship[i][col+dir].name === "UNUSED");
+        console.log(ship[i][col].name);
+        if(ship[i][col+dir].name === "UNUSED"){
+            return i;
+        }
+    }
+    return 9;
+}
+
 function addMoves(parent, moves, ship, i, j, operations){
     let check = isOperation(ship[i][j], operations); 
     let isOp = check[1];
@@ -88,7 +102,23 @@ function addMoves(parent, moves, ship, i, j, operations){
         let type = op.type;
         if(type == "offload"){
             let newOps = Array.from(parent.ops);
-            let dist = Math.abs(9-i) + Math.abs(0 - (j + 1)) + 2;
+            let dist = Math.abs(9-i) + Math.abs(0 - (j + 0)) + 4;
+            if(parent.move != null) {
+                console.log(parent.move)
+                let r = 0;
+                let c = 0;
+                if(parent.move.newRow == -1){
+                    r = 9;
+                    c = 0;
+                }else {
+                    r = findObstacles(ship, parent.move.newRow, parent.move.newColumn, j);
+                    console.log(r);
+                    c = parent.move.newColumn;
+                }
+                dist += Math.abs(r - i) + Math.abs(c - j);
+            }else {
+                dist += Math.abs(9 - i) + Math.abs(0 - j);
+            }
             let m = {
                 type: "offload",
                 name: op.name,
@@ -116,8 +146,24 @@ function addMoves(parent, moves, ship, i, j, operations){
         for(let k = 0; k < open.length; k++){
             let row = open[k][0];
             let col = open[k][1];
-            let n = ship[i][j].name;
             let dist = Math.abs(row - i) + Math.abs(col - j);
+            if(parent.move != null) {
+                console.log(parent.move)
+                let r = 0;
+                let c = 0;
+                if(parent.move.newRow == -1){
+                    r = 9;
+                    c = 0;
+                }else {
+                    r = findObstacles(ship, parent.move.newRow, parent.move.newColumn, j);
+                    console.log(r);
+                    c = parent.move.newColumn;
+                }
+                dist += Math.abs(r - i) + Math.abs(c - j);
+            }else {
+                dist += Math.abs(9 - i) + Math.abs(0 - j);
+            }
+            let n = ship[i][j].name;
             let m = {
                 type: "move",
                 name: n,
@@ -210,7 +256,7 @@ function expandNode(curr, operations, frontier, visited) {
         let hash = hashGrid(newNode.problem.grid);
         console.log("add");
         if(!visited.has(hash) || visited.get(hash) > newNode.cost){
-            frontier.enqueue(newNode, newNode.cost);
+            frontier.enqueue(newNode, getCost(newNode, operations));
         }
     }
     return;
@@ -313,7 +359,7 @@ export default function handleLoading(manifestText, operations) {
     return solutionPath.map((move)=> ({
         ...move,
         oldRow: move.oldRow + 1,
-        oldColumn: move.oldColumn = 1,
+        oldColumn: move.oldColumn + 1,
         newRow: move.newRow + 1,
         newColumn: move.newColumn + 1,
     }));
@@ -420,6 +466,7 @@ let testOperations = [
     {type: "onload", name: "Nat"},
     {type: "offload", name: "Batons"},
     {type: "offload", name: "Catfish"},
+    // {type: "onload", name: "Dog"},
     ];
 let testRes = handleLoading(text, testOperations);
 console.log(testRes);

@@ -417,9 +417,9 @@ let text = `\
 [08,11], {00000}, UNUSED
 [08,12], {00000}, UNUSED`;
 let testOperations = [
-    // {type: "onload", name: "Nat"},
-    // {type: "offload", name: "Bat"},
-    {type: "offload", name: "Cat"},
+    {type: "onload", name: "Nat"},
+    {type: "offload", name: "Batons"},
+    {type: "offload", name: "Catfish"},
     ];
 let testRes = handleLoading(text, testOperations);
 console.log(testRes);

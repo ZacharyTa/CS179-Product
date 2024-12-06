@@ -19,6 +19,7 @@ class LoadNode extends Node{
 }
 
 function goalTest(ops, operations) {
+    console.log(`goaltest ops: ${ops.length}`)
     return ops.length === operations.length;
 }
 
@@ -320,34 +321,34 @@ export default function handleLoading(manifestText, operations) {
 
 let text = `\
 [01,01], {00000}, NAN
-[01,02], {00000}, NAN
-[01,03], {00000}, NAN
-[01,04], {00000}, NAN
-[01,05], {00000}, NAN
-[01,06], {00000}, NAN
-[01,07], {00000}, NAN
-[01,08], {00000}, NAN
-[01,09], {00000}, NAN
-[01,10], {00000}, NAN
-[01,11], {00000}, NAN
+[01,02], {00060}, Catfish
+[01,03], {00020}, Dogana
+[01,04], {00020}, Batons
+[01,05], {00000}, UNUSED
+[01,06], {00000}, UNUSED
+[01,07], {00000}, UNUSED
+[01,08], {00000}, UNUSED
+[01,09], {00000}, UNUSED
+[01,10], {00000}, UNUSED
+[01,11], {00000}, UNUSED
 [01,12], {00000}, NAN
-[02,01], {00000}, NAN
-[02,02], {00000}, UNUSED
+[02,01], {00000}, UNUSED
+[02,02], {00020}, Rations for US Army
 [02,03], {00000}, UNUSED
 [02,04], {00000}, UNUSED
-[02,05], {02000}, Cat
+[02,05], {00000}, UNUSED
 [02,06], {00000}, UNUSED
 [02,07], {00000}, UNUSED
 [02,08], {00000}, UNUSED
 [02,09], {00000}, UNUSED
 [02,10], {00000}, UNUSED
 [02,11], {00000}, UNUSED
-[02,12], {00000}, NAN
+[02,12], {00000}, UNUSED
 [03,01], {00000}, UNUSED
 [03,02], {00000}, UNUSED
 [03,03], {00000}, UNUSED
 [03,04], {00000}, UNUSED
-[03,05], {02007}, Dog
+[03,05], {00000}, UNUSED
 [03,06], {00000}, UNUSED
 [03,07], {00000}, UNUSED
 [03,08], {00000}, UNUSED
@@ -359,7 +360,7 @@ let text = `\
 [04,02], {00000}, UNUSED
 [04,03], {00000}, UNUSED
 [04,04], {00000}, UNUSED
-[04,05], {02011}, Cow
+[04,05], {00000}, UNUSED
 [04,06], {00000}, UNUSED
 [04,07], {00000}, UNUSED
 [04,08], {00000}, UNUSED
@@ -371,7 +372,7 @@ let text = `\
 [05,02], {00000}, UNUSED
 [05,03], {00000}, UNUSED
 [05,04], {00000}, UNUSED
-[05,05], {10000}, Ewe
+[05,05], {00000}, UNUSED
 [05,06], {00000}, UNUSED
 [05,07], {00000}, UNUSED
 [05,08], {00000}, UNUSED
@@ -383,7 +384,7 @@ let text = `\
 [06,02], {00000}, UNUSED
 [06,03], {00000}, UNUSED
 [06,04], {00000}, UNUSED
-[06,05], {02020}, Owl
+[06,05], {00000}, UNUSED
 [06,06], {00000}, UNUSED
 [06,07], {00000}, UNUSED
 [06,08], {00000}, UNUSED
@@ -395,7 +396,7 @@ let text = `\
 [07,02], {00000}, UNUSED
 [07,03], {00000}, UNUSED
 [07,04], {00000}, UNUSED
-[07,05], {01100}, Doe
+[07,05], {00000}, UNUSED
 [07,06], {00000}, UNUSED
 [07,07], {00000}, UNUSED
 [07,08], {00000}, UNUSED
@@ -407,7 +408,7 @@ let text = `\
 [08,02], {00000}, UNUSED
 [08,03], {00000}, UNUSED
 [08,04], {00000}, UNUSED
-[08,05], {03044}, Pig
+[08,05], {00000}, UNUSED
 [08,06], {00000}, UNUSED
 [08,07], {00000}, UNUSED
 [08,08], {00000}, UNUSED
@@ -416,8 +417,9 @@ let text = `\
 [08,11], {00000}, UNUSED
 [08,12], {00000}, UNUSED`;
 let testOperations = [
-    {type: "onload", name: "Nat"},
-    {type: "offload", name: "Doe"},
+    // {type: "onload", name: "Nat"},
+    // {type: "offload", name: "Bat"},
+    {type: "offload", name: "Cat"},
     ];
 let testRes = handleLoading(text, testOperations);
 console.log(testRes);

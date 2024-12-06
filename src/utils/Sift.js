@@ -162,6 +162,7 @@ export function operateSift(ship){
                     } 
                     else{ //Creates a crane movement instruction inbetween crate instructions
 
+                        //maybe this needs adjusting? double check if this is right, i dont understand why cost would change this so hard.
                         var mm = current.getMove();
                         var cm = current.getCraneMove();
                         //oly compute crane if mm.name != cm Move name! (container changes)

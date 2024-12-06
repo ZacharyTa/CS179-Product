@@ -164,68 +164,9 @@ function processData(manifestText){
 
 
 
-// precheck function to return true or false if the initial grid is possible to balance
-function isSolvable(ship){
-
-    var weights = getAllWeights(ship);
-    var totalWeight = 0;
-    for(var i = 0; i < weights.length; i++){ totalWeight += weights[i]; }
-
-    //if only 1 container, call sift
-    if (weights.length === 1){ return false;}
-
-
-    //inside solvable determine if buffer space should be considered
-    //if about half of the location of the ship grid is full, enable
-    if(weights.length > 50 ){
-        enable = true;
-    }
-
-    var totalWeightHalf = Math.floor(totalWeight/2);
-    var dp = Array(totalWeightHalf + 1).fill(false);
-    dp[0] = true; //since 0 weight always poss
-
-    for(var i = 0; i < weights.length; i++){
-        for( var j = totalWeightHalf; j >= weights[i]; j--){
-            if(dp[j - weights[i]]){dp[j] = true;}
-        }
-    }
-
-    for (var leftW = 0; leftW <= totalWeightHalf; leftW++){
-        if(dp[leftW]){
-            var rightW = totalWeight - leftW;
-
-            if(leftW >= 0.9 * rightW && leftW <= 1.1 * rightW){
-                console.log(`Sol found, leftW: ${leftW} and rightW: ${rightW}`);
-                return true;
-            }
-        }
-    }
-
-    console.log("precheck--> no valid solution, calling sift.");
-    return false;
-
-}
-
-
-function SIFT (ship){ //for the sake of testing that it returns []
-    return [];
-}
-
-   //helper function to only return an array of weights in a grid
-   function getAllWeights(grid){
-    var weights = [];
-    for(var i = 0; i < grid.length; i++){
-        for (var j = 0; j < grid[i].length; j++){
-            if(grid[i][j].name !== "NAN" && grid[i][j].name !== "UNUSED"){
-                weights.push(grid[i][j].w);
-            }
-        }
-    }
-    return weights;
-}
 
 
 
-export {Problem, Node, processData, hashGrid, isSolvable, getAllWeights}
+
+export {Problem, Node, processData, hashGrid}
 

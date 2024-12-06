@@ -2,10 +2,8 @@
 import React, { useState, useEffect } from "react";
 import { Container, OutputLoadOperation } from "@/lib/types";
 import { useGridData } from "@/hooks/useGridData";
-import {
-  getCurrentOperationIndex,
-  getCurrentOperation,
-} from "@/utils/operationCookies";
+import { getCurrentOperation } from "@/utils/operationCookies";
+import { Target, Circle } from "lucide-react";
 
 interface ShipGridProps {
   containers?: Container[];
@@ -26,7 +24,7 @@ const ShipGrid: React.FC<ShipGridProps> = ({
   onSelectContainer,
   currentOperationIndex,
 }) => {
-  const { gridSlots, selectedGridSlots } = useGridData({
+  const { gridSlots } = useGridData({
     containers,
     columns,
     rows,
@@ -78,9 +76,11 @@ const ShipGrid: React.FC<ShipGridProps> = ({
     }
   }, [currentOperationIndex]);
 
-  const handleSlotClick = (slot: Container | null, index: number) => {
+  const handleSlotClick = (slot: Container | null) => {
     if (loading && slot && slot.item !== "UNUSED" && slot.item !== "NAN") {
-      onSelectContainer && onSelectContainer(slot);
+      if (onSelectContainer) {
+        onSelectContainer(slot);
+      }
     }
   };
 
@@ -106,7 +106,7 @@ const ShipGrid: React.FC<ShipGridProps> = ({
             return (
               <div
                 key={index}
-                className={`flex items-center justify-center text-center border aspect-square ${loading ? "text-[12px]" : "text-[6px]"} ${cellClass} ${
+                className={`flex items-center justify-center text-center border aspect-square ${loading ? "text-[12px]" : "text-[12px]"} ${cellClass} ${
                   slot
                     ? offloadSlots.has(index)
                       ? "bg-success"
@@ -117,9 +117,15 @@ const ShipGrid: React.FC<ShipGridProps> = ({
                           : "bg-base-300 text-base-content"
                     : "bg-white"
                 } hover:opacity-70`}
-                onClick={() => handleSlotClick(slot, index)}
+                onClick={() => handleSlotClick(slot)}
               >
                 <span className="truncate">{slot ? slot?.item : "Empty"}</span>
+                {isNew && (
+                  <Target className="absolute w-12 h-12 animate-pulse opacity-0 text-error" />
+                )}{" "}
+                {isOld && (
+                  <Circle className="absolute w-12 h-12 animate-pulse opacity-0 text-warning" />
+                )}{" "}
               </div>
             );
           })}

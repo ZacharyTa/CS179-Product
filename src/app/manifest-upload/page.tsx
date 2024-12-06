@@ -19,7 +19,6 @@ export default function UploadPage() {
     addLog(
       `Manifest ${fileName} is opened, there are ${numContainers} containers on the ship.`,
     );
-
     const savedManifestText = Cookies.set("manifestText", manifestText);
     Cookies.set("bufferText", bufferEmpty.trim());
     if (savedManifestText) {

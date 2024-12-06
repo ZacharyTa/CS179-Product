@@ -5,12 +5,13 @@ import handleBalancing from "@/utils/handleBalancing";
 import { setOperations } from "@/utils/operationCookies";
 import { setSelection } from "@/utils/selectionCookies";
 import Layout from "@/components/Layout";
+import { getManifestData } from "@/utils/manifestCookies";
 
 export default function SelectionPage() {
   const router = useRouter();
 
   const handleBalance = () => {
-    const optimalOperations = handleBalancing();
+    const optimalOperations = handleBalancing(getManifestData());
     setSelection("balancing");
 
     setOperations(optimalOperations);

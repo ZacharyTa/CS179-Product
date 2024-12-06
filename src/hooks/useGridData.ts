@@ -1,10 +1,3 @@
-// Transform ManifestData format into Grid data form
-
-// Container {
-//  item: string;
-//   location: { row: number; col: number };
-//   weight: number;
-// }
 
 import { useState, useEffect } from "react";
 import { Container } from "@/lib/types";

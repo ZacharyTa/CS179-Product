@@ -3,6 +3,8 @@
 import { OutputLoadOperation } from "@/lib/types";
 import { getManifestData, setManifestData } from "@/utils/manifestCookies";
 import { getBufferData, setBufferData } from "@/utils/bufferCookies";
+import { addPinkData, deletePinkData, swapPinkData, getPinkDataArray } from "@/utils/pinkDataHelper";
+import { getPinkData, setPinkData } from "@/utils/pinkCookies";
 import { addLog } from "@/utils/logCookies";
 
 //TODO: needa handle how to handle buffer
@@ -10,7 +12,7 @@ import { addLog } from "@/utils/logCookies";
 // 1. Add operation.type === 'buffer'
 // 2. buffer operation type essentially is a move operation, except it needs to search index on the manifestData AND bufferData
 //  - BufferData's data format will still be the same as manifestData(row, -col)
-//  - When column data is negative, it implcitiy implies to search in bufferData
+//  - When column data is negative, it implicitly implies to search in bufferData
 //  - Need to save bufferData into Cookies
 // 3. Create a BufferGrid component (same as ShipGrid, except dimensions are (4x24), and dir="rtl"
 // 4. I think we can keep the useGridData.ts logic the same?
@@ -54,11 +56,16 @@ export default function applyOperation(
     return null;
   });
 
+  // Parse Pink data
+  const pinkData = getPinkDataArray();
+
   // handle buffer
   if (operation.type === "buffer") {
     console.log("Handling buffer operation: ", operation);
 
-    // find source (then copy from source and and set item/weight to UNUISED and 0)
+    // find source (then copy from source and and set item/weight to UNUSED and 0)
+    const isOldInPink = (operation.oldRow === 9 && operation.oldColumn === 1) || (operation.oldRow === 5 && operation.oldColumn === -1);
+    const isNewInPink = (operation.newRow === 9 && operation.newColumn === 1) || (operation.newRow === 5 && operation.newColumn === -1);
 
     const isOldInBuffer = operation.oldColumn < 0;
     const isNewInBuffer = operation.newColumn < 0;
@@ -66,64 +73,169 @@ export default function applyOperation(
     let container = null;
     // check source in buffer
     if (isOldInBuffer) {
-      const index = bufferData.findIndex(
-      (entry) =>
-        entry &&
-        entry.row === operation.oldRow &&
-        entry.col === -operation.oldColumn &&
-        entry.item !== "UNUSED" &&
-        entry.item !== "NAN",
-    );
+      if (isOldInPink) {
+        container = pinkData[0];
+        console.log("AHSFJAHSFJ", container);
+      } else
+      {const index = bufferData.findIndex(
+        (entry) =>
+          entry &&
+          entry.row === operation.oldRow &&
+          entry.col === -operation.oldColumn &&
+          entry.item !== "UNUSED" &&
+          entry.item !== "NAN",
+      );
 
-    if (!bufferData[index]) return;
-    
+      if (!bufferData[index]) return;
 
-    if (index !== -1) {
-      container = { ...bufferData[index] }; //Shallow copy to prevent race condition
-      bufferData[index].weight = 0;
-      bufferData[index].item = "UNUSED";
-    }
+      if (index !== -1) {
+        container = { ...bufferData[index] }; //Shallow copy to prevent race condition
+        bufferData[index].weight = 0;
+        bufferData[index].item = "UNUSED";
+      }}
     } else { // check source in manifest
       const index = manifestData.findIndex(
-      (entry) =>
-        entry &&
-        entry.row === operation.oldRow &&
-        entry.col === operation.oldColumn &&
-        entry.item !== "UNUSED" &&
-        entry.item !== "NAN",
-    );
+        (entry) =>
+          entry &&
+          entry.row === operation.oldRow &&
+          entry.col === operation.oldColumn &&
+          entry.item !== "UNUSED" &&
+          entry.item !== "NAN",
+      );
 
-    if (!manifestData[index]) return;
-    
+      if (!manifestData[index]) return;
 
-    if (index !== -1) {
-      container = { ...manifestData[index] }; //Shallow copy to prevent race condition
-      manifestData[index].weight = 0;
-      manifestData[index].item = "UNUSED";
-    }
+      if (index !== -1) {
+        container = { ...manifestData[index] }; //Shallow copy to prevent race condition
+        manifestData[index].weight = 0;
+        manifestData[index].item = "UNUSED";
+      }
     }
 
     // Now we place container into destination
     if (container) {
       // placing container in buffer
       if (isNewInBuffer) {
-        const newIndex = bufferData.findIndex(
-        (entry) =>
-          entry &&
-          entry.row === operation.newRow &&
-          entry.col === -operation.newColumn &&
-          entry.item === "UNUSED"
-      );
+        if (isNewInPink) {
+          pinkData[0] = {
+            row: operation.newRow,
+            col: operation.newColumn,
+            weight: container.weight,
+            item: container.item,
+            originalLine: `[${operation.newRow.toString().padStart(2, "0")},${operation.newColumn.toString().padStart(2, "0")}], {${container.weight.toString().padStart(5, "0")}}, ${container.item}`,
+          };
+      } else
+        {const newIndex = bufferData.findIndex(
+          (entry) =>
+            entry &&
+            entry.row === operation.newRow &&
+            entry.col === -operation.newColumn &&
+            entry.item === "UNUSED"
+        );
 
-      if (!bufferData[newIndex]) return;
+        if (!bufferData[newIndex]) return;
 
-      if (newIndex !== -1) {
-        // thisll update the new location with the container ("swapping locations")
-        bufferData[newIndex].weight = container.weight;
-        bufferData[newIndex].item = container.item;
-      }
+        if (newIndex !== -1) {
+          // this will update the new location with the container ("swapping locations")
+          bufferData[newIndex].weight = container.weight;
+          bufferData[newIndex].item = container.item;
+        }}
       } else { // placing container in manifest
         const newIndex = manifestData.findIndex(
+          (entry) =>
+            entry &&
+            entry.row === operation.newRow &&
+            entry.col === operation.newColumn &&
+            entry.item === "UNUSED"
+        );
+
+        if (!manifestData[newIndex]) return;
+
+        if (newIndex !== -1) {
+          // this will update the new location with the container ("swapping locations")
+          manifestData[newIndex].weight = container.weight;
+          manifestData[newIndex].item = container.item;
+        }
+      }
+    }
+  }
+  // Handle "move" operation
+  else if (operation.type === "move" && operation.name !== "crane") {
+    const isOldInPink = (operation.oldRow === 9 && operation.oldColumn === 1) || (operation.oldRow === 5 && operation.oldColumn === -1);
+    const isNewInPink = (operation.newRow === 9 && operation.newColumn === 1) || (operation.newRow === 5 && operation.newColumn === -1);
+
+    let container = null;
+
+    // If moving from Pink to Pink
+    if (isOldInPink && isNewInPink) {
+      // Find the container in pinkData at the old location
+      console.log("Moving from Pink to Pink", pinkData);
+      swapPinkData();
+    }
+
+    // Find source container
+    else if (isOldInPink) {
+      // Source is in Pink slot
+      const index = pinkData.findIndex(
+        (entry) =>
+          entry &&
+          entry.row === operation.oldRow &&
+          entry.col === operation.oldColumn &&
+          entry.item !== "UNUSED" &&
+          entry.item !== "NAN"
+      );
+
+      if (index !== -1) {
+        container = { ...pinkData[index] };
+        // Remove container from pinkData
+        pinkData[index].weight = 0;
+        pinkData[index].item = "UNUSED";
+      } else {
+        console.log("Error: Container not found in Pink slot");
+        return;
+      }
+    } else {
+      // Source is in manifestData
+      const index = manifestData.findIndex(
+        (entry) =>
+          entry &&
+          entry.row === operation.oldRow &&
+          entry.col === operation.oldColumn &&
+          entry.item !== "UNUSED" &&
+          entry.item !== "NAN"
+      );
+
+      if (index !== -1) {
+        container = { ...manifestData[index] };
+        // Remove container from manifestData
+        manifestData[index].weight = 0;
+        manifestData[index].item = "UNUSED";
+      } else {
+        console.log("Error: Container not found in manifestData");
+        return;
+      }
+    }
+
+    // Place container into destination
+    if (isNewInPink) {
+      // Add new entry to pinkData
+      pinkData[0] = {
+        row: operation.newRow,
+        col: operation.newColumn,
+        weight: pinkData[0]?.weight || container?.weight || 0,
+        item: pinkData[0]?.item || container?.item || "",
+        originalLine: `[${operation.newRow
+          .toString()
+          .padStart(2, "0")},${operation.newColumn
+            .toString()
+            .padStart(2, "0")}], {${container?.weight || 0
+              .toString()
+              .padStart(5, "0")}}, ${container?.item}`,
+      };
+      console.log("Adding new entry to PinkData", pinkData);
+    } else {
+      // Destination is in manifestData
+      const index = manifestData.findIndex(
         (entry) =>
           entry &&
           entry.row === operation.newRow &&
@@ -131,64 +243,16 @@ export default function applyOperation(
           entry.item === "UNUSED"
       );
 
-      if (!manifestData[newIndex]) return;
-
-      if (newIndex !== -1) {
-        // thisll update the new location with the container ("swapping locations")
-        manifestData[newIndex].weight = container.weight;
-        manifestData[newIndex].item = container.item;
-      }
-      }
-    }
-  }
-  //handle move
-  else if (operation.type === "move") {
-    //{type: "move", name: "Beans", time: 1, oldRow: 1, oldColumn: 4, newRow: 1, newColumn: 5},
-    // console.log("Handling move operation: ", operation);
-    const index = manifestData.findIndex(
-      (entry) =>
-        entry &&
-        entry.row === operation.oldRow &&
-        entry.col === operation.oldColumn &&
-        entry.item !== "UNUSED" &&
-        entry.item !== "NAN",
-    );
-
-    if (!manifestData[index]) return;
-
-    if (index !== -1) {
-      const container = manifestData[index];
-      // console.log("found container: ", container);
-      const newIndex = manifestData.findIndex(
-        (entry) =>
-          entry &&
-          entry.row === operation.newRow &&
-          entry.col === operation.newColumn,
-      );
-
-      if (!manifestData[newIndex]) return;
-
-      if (newIndex !== -1) {
-        // thisll update the new location with the container ("swapping locations")
-        manifestData[newIndex].weight = container.weight;
-        manifestData[newIndex].item = container.item;
-        console.log(
-          "updated existing location with container:",
-          manifestData[newIndex],
-        );
+      if (index !== -1) {
+        // Place container into manifestData
+        manifestData[index].weight = container.weight;
+        manifestData[index].item = container.item;
       } else {
-        // maybe add new entry if newIndex doesn't exist
-        console.log("adding new location with container:");
+        console.log("Error: Destination slot in manifestData is not available");
+        return;
       }
-
-      // update old location with UNUSED
-      manifestData[index].weight = 0;
-      manifestData[index].item = "UNUSED";
-    } else {
-      console.log("Error: Container not moved");
     }
   }
-
   //handle offload
   else if (operation.type === "offload") {
     // console.log("Handling offload:", operation);
@@ -224,7 +288,7 @@ export default function applyOperation(
     const newEntry = {
       row: operation.newRow,
       col: operation.newColumn,
-      weight: operation.weight ? operation.weight  : 0,
+      weight: operation.weight ? operation.weight : 0,
       item: operation.name,
       originalLine: `[${operation.newRow.toString().padStart(2, "0")},${operation.newColumn.toString().padStart(2, "0")}], {00000}, ${operation.name}`,
     };
@@ -239,16 +303,16 @@ export default function applyOperation(
     );
 
     if (index !== -1) {
-      // if location already exists thennnnn smth is wrong
+      // if location already exists then something is wrong
       manifestData[index] = newEntry;
       console.log(
         "Yayyy Updated existing location with new container:",
         manifestData[index],
       );
     } else {
-      // if location already exists thennnnn smth is wrong
+      // if location already exists then something is wrong
       console.log(
-        "Error: Tried to onload container into location thats already occupied or can't be moved to",
+        "Error: Tried to onload container into location that's already occupied or can't be moved to",
         manifestData[index],
         newEntry,
       );
@@ -268,8 +332,21 @@ export default function applyOperation(
       return `[${entry?.row.toString().padStart(2, "0")},${entry?.col.toString().padStart(2, "0")}], {${entry?.weight.toString().padStart(5, "0")}}, ${entry?.item}`;
     }).join("\n");
 
-  
-    // Update cookies
-    setManifestData(updatedManifestLines);
-    setBufferData(updatedBufferLines); //TODO
+  // Return updated Pink data
+  const updatedPinkLines = pinkData
+    .filter((entry) => entry)
+    .map((entry) => {
+      return `[${entry?.row.toString().padStart(2, "0")},${entry?.col
+        .toString()
+        .padStart(2, "0")}], {${entry?.weight
+          .toString()
+          .padStart(5, "0")}}, ${entry?.item}`;
+    })
+    .join("\n");
+  console.log("UpdatedPinkData", updatedPinkLines);
+
+  // Update cookies
+  setManifestData(updatedManifestLines);
+  setBufferData(updatedBufferLines); //TODO
+  setPinkData(updatedPinkLines);
 }

@@ -8,9 +8,7 @@ import useBufferData from "@/hooks/useBufferData";
 import OperationList from "@/components/OperationList";
 import {
   getOperations,
-  setOperations,
   getCurrentOperation,
-  setCurrentOperationIndex,
   getCurrentOperationIndex,
 } from "@/utils/operationCookies";
 import { getBufferData } from "@/utils/bufferCookies";
@@ -19,6 +17,7 @@ import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import { getManifestData } from "@/utils/manifestCookies";
 import Image from "next/image";
 import Log from "@/components/Log";
+import PinkGrid from "@/components/PinkGrid";
 
 export default function BalancePage() {
   const [manifestText, setManifestText] = useState<string>("");
@@ -72,7 +71,7 @@ export default function BalancePage() {
   }
 
   return (
-    <div>
+    <div className="flex flex-col h-screen">
       <Layout
         sidebar={
           <OperationList
@@ -84,47 +83,63 @@ export default function BalancePage() {
           />
         }
       >
-        <TransformWrapper limitToBounds={false} minScale={0.5} maxScale={2}>
-          <TransformComponent>
-            <div className="h-full/2 outline outline-red-500">
-              <div className="grid grid-cols-7 grid-rows-8 gap-4 outline outline-red-500">
-                <div className="col-span-2 row-span-3 col-start-6 row-start-6 outline outline-red-500">
-                  {manifestData && (
-                    <ShipGrid
+        <div className="flex-1 flex">
+          <TransformWrapper limitToBounds={false} minScale={0.5} maxScale={2}>
+            <TransformComponent>
+              <div className="h-full w-screen outline outline-red-500">
+                <div className="grid grid-cols-14 grid-rows-16 gap-4 outline outline-red-500">
+                  <div className="col-span-2 row-span-1 col-start-6 row-start-5">
+                    <PinkGrid
                       columns={manifestData.columns}
-                      rows={manifestData.rows}
-                      containers={manifestData.containers}
-                      loading={false}
+                      shipGrid={true}
                       currentOperationIndex={currentOperationIndex}
                     />
-                  )}
-                </div>
-                <div className="col-span-4 row-span-2 col-start-1 row-start-6 outline outline-red-500">
-                  {bufferData && (
-                    <BufferGrid
+                  </div>
+                  <div className="col-span-2 row-span-3 col-start-6 row-start-6 outline outline-red-500">
+                    {manifestData && (
+                      <ShipGrid
+                        columns={manifestData.columns}
+                        rows={manifestData.rows}
+                        containers={manifestData.containers}
+                        loading={false}
+                        currentOperationIndex={currentOperationIndex}
+                      />
+                    )}
+                  </div>
+                  <div className="col-span-4 row-span-1 col-start-1 row-start-5 outline outline-red-500">
+                    <PinkGrid
                       columns={bufferData.columns}
-                      rows={bufferData.rows}
-                      containers={bufferData.containers}
+                      shipGrid={false}
                       currentOperationIndex={currentOperationIndex}
-                      loading={false}
                     />
-                  )}
-                </div>
-                <div className="col-span-1 row-span-1 col-start-5 row-start-7 outline outline-red-500">
-                  <div className="flex justify-center">
-                    <Image
-                      src="/assets/truck.png"
-                      alt="truck"
-                      width={100}
-                      height={100}
-                      className={imageOutlineClass}
-                    />
+                  </div>
+                  <div className="col-span-4 row-span-2 col-start-1 row-start-6 outline outline-red-500">
+                    {bufferData && (
+                      <BufferGrid
+                        columns={bufferData.columns}
+                        rows={bufferData.rows}
+                        containers={bufferData.containers}
+                        currentOperationIndex={currentOperationIndex}
+                        loading={false}
+                      />
+                    )}
+                  </div>
+                  <div className="col-span-1 row-span-1 col-start-5 row-start-7 outline outline-red-500">
+                    <div className="flex justify-center">
+                      <Image
+                        src="/assets/truck.png"
+                        alt="truck"
+                        width={100}
+                        height={100}
+                        className={imageOutlineClass}
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </TransformComponent>
-        </TransformWrapper>
+            </TransformComponent>
+          </TransformWrapper>
+        </div>
       </Layout>
       <div className="grid grid-cols-5">
         <div className="col-span-3 col-start-1">

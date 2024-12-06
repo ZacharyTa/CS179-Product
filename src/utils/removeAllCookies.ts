@@ -7,4 +7,5 @@ export function removeAllCookies(): void {
   Cookies.remove("manifestFileName");
   Cookies.remove("bufferText");
   Cookies.remove("selection");
+  Cookies.remove("pinkText");
 }

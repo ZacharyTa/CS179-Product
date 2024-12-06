@@ -39,6 +39,7 @@ class Problem{
 class Node{
 
     constructor(problem, parent, move, cost, craneMove, bufferMove){
+    // constructor(problem, parent, move, cost, bufferMove){
         this.problem = problem;         
         this.parent = parent; 
         this.move = move,
@@ -62,13 +63,12 @@ class Node{
         while (currNode.parent != null) {
             if (currNode.move != null && !isNaN(currNode.move.newRow) && !isNaN(currNode.move.newColumn)) {
                 path.unshift(currNode.move);
+                //add crane time
+                if (currNode.craneMove != null && !isNaN(currNode.craneMove.newRow) && !isNaN(currNode.craneMove.newColumn)) {
+                    //path.unshift(currNode.craneMove);
+                    currNode.move.time = (currNode.move.time || 0) + currNode.craneMove.time;
+                }
             }
-    
-            //add crane move
-            if (currNode.craneMove != null && !isNaN(currNode.craneMove.newRow) && !isNaN(currNode.craneMove.newColumn)) {
-                path.unshift(currNode.craneMove);
-            }
-    
 
 
             //add buffer move

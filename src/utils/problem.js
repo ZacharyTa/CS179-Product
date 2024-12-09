@@ -3,15 +3,19 @@
 class Problem{
     
     // constructor(ship, buffer){
-    constructor(ship){        
+    constructor(ship, buffer){        
         this.grid = ship;
-        //this.buffer = buffer; //might remove this, not sure yet, if so will also delete setBuffer() & bufferEmpty()
+        this.buffer = buffer; //might remove this, not sure yet, if so will also delete setBuffer() & bufferEmpty()
         // this.time = time; this will be stored with Node instead
     }
 
     // setTime(time) { this.time = time;}
     getGrid(){return this.grid;}
     getTime(){return this.time;}
+
+    bufferEmpty(){
+        return this.buffer.every(row => row.every(cell => cell === "UNUSED"))
+    }
 
     //function to return a grid with a new move; 
     getNewGrid(grid, move){
@@ -26,7 +30,6 @@ class Problem{
 
 
     setBuffer(nex, newY, name){}
-    bufferEmpty(){}; //returns true if nothing is in the buffer
 }
 
 

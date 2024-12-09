@@ -21,7 +21,7 @@ interface OperationListProps {
   updateBufferText?: (newBufferText: string) => void;
   onRemoveOperation?: (operationName: string) => void;
   loading: boolean;
-  updateCurrentOperationIndex: (index: number) => void;
+  updateCurrentOperationIndex?: (index: number) => void;
 }
 
 const OperationList: React.FC<OperationListProps> = ({
@@ -45,7 +45,7 @@ const OperationList: React.FC<OperationListProps> = ({
       setCurrentOperationIndex(newIndex);
       updateManifestText(getManifestData());
       if (updateBufferText) updateBufferText(getBufferData());
-      updateCurrentOperationIndex(newIndex);
+      if (updateCurrentOperationIndex) updateCurrentOperationIndex(newIndex);
     }
   };
 

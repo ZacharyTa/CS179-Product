@@ -77,9 +77,11 @@ const OperationCard: React.FC<OperationCardProps> = ({
       <div className="card-body">
         <div className="flex flex-row justify-between">
           <h2 className="card-title text-base-content">{`${type.toUpperCase()}`}</h2>
-          <span className="text-base-content text-sm font-light">
-            {time} mins
-          </span>
+          {!loading && (
+            <span className="text-base-content text-sm font-light">
+              {time} mins
+            </span>
+          )}
           <button
             className="btn btn-circle btn-xs text-error"
             onClick={handleRemove}
@@ -128,7 +130,11 @@ const OperationCard: React.FC<OperationCardProps> = ({
         <p className="text-base-content">
           <span className="text-sm">To: </span>
           <span className="text-lg font-bold">
-            {type === "offload" ? "Truck" : `[${newRow}, ${newColumn}]`}
+            {type === "offload"
+              ? "Truck"
+              : type === "onload" && loading
+                ? "Ship (TBD)"
+                : `[${newRow}, ${newColumn}]`}
           </span>
         </p>
         {showNextButton && !loading && (

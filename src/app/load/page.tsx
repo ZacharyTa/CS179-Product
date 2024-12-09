@@ -70,7 +70,7 @@ export default function LoadPage() {
       return;
     }
 
-    let weight = prompt("Enter cargo's weight/mass(kg):");
+    let weight = prompt("Enter cargo's weight/mass(kg) (optional):");
     if (!weight) {
       weight = "0";
     }
@@ -124,7 +124,7 @@ export default function LoadPage() {
     >
       <div className="h-full outline outline-red-500">
         <div className="grid grid-flow-col grid-cols-4 grid-rows-5 gap-4 outline outline-red-500">
-          <div className="col-span-3 row-span-4 outline outline-red-500">
+          <div className="col-span-2 row-span-3 row-start-2 outline outline-red-500">
             {manifestData && (
               <ShipGrid
                 columns={manifestData.columns}

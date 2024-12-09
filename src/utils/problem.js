@@ -2,20 +2,17 @@
 class Problem{
     
     // constructor(ship, buffer){
-    constructor(ship, bufferZone){        
+    constructor(ship, buffer){        
         this.grid = ship;
-        this.buffer = bufferZone; 
+        this.buffer = buffer;
+   
     }
 
-    bufferEmpty(){
-        return this.buffer.every(row => row.every(cell => cell === "UNUSED"))
-    } 
-
-
+    // setTime(time) { this.time = time;}
     getGrid(){return this.grid;}
-    getBugger(){return this.buffer}
+    getTime(){return this.time;}
 
-    //function to return a grid with a new move; (used for either buffer or grid)
+    //function to return a grid with a new move; 
     getNewGrid(grid, move){
         var newGrid = grid.map(row =>row.map(cell => ({...cell})));
 
@@ -27,12 +24,21 @@ class Problem{
 
     }
 
-    //if crossing between buffer and grid (need to modify getNewGrid)
+    bufferEmpty(){
 
+        for(var i = 0; i < this.buffer.length; i++){
+            for(var j = 0; j < this.buffer[i].length; j++){
+                if (this.buffer[i][j] !== "UNUSED"){
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    
 }
-
-
-
 
 
 //Node structure 
@@ -69,7 +75,6 @@ class Node{
                     currNode.move.time = (currNode.move.time || 0) + currNode.craneMove.time;
                 }
             }
-
 
             //add buffer move
             if (currNode.bufferMove != null && !isNaN(currNode.bufferMove.newRow) && !isNaN(currNode.bufferMove.newColumn)) {
@@ -135,38 +140,5 @@ function processData(manifestText){
 //info[2] = "string"
 
 
-// function giantMatrix(ship){
-//     const grid = Array.from({length: 8}, ()=> new Array(36).fill(null));
-
-
-//     //copy contents of ship into grid
-//     for(var i = 0; i < ship.length; i++){
-//         for(var j = 0; j < ship[i].length; j++){
-//             grid[i][j] = ship[i][j];
-//         }
-//     }
-
-//     //construct buffer zone
-//     for(var i = 0; i < grid.length; i++){
-//         for(var j = 8; j < grid[i].length; j++){
-//             if (i < 4){
-//                 grid[i][j] = "NAN"
-//             }
-//             else{
-//                 grid[i][j] = "UNUSED"
-//             }
-//         }
-//     }
-
-//     return grid;
-
-// }
-
-
-
-
-
-
 
 export {Problem, Node, processData, hashGrid}
-

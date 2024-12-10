@@ -8,6 +8,7 @@ class Problem{
         // this.time = time; this will be stored with Node instead
     }
 
+
     // setTime(time) { this.time = time;}
     getGrid(){return this.grid;}
     getTime(){return this.time;}
@@ -25,6 +26,37 @@ class Problem{
 
         return (newGrid);
 
+    }
+
+    getNewGrids(grid, buffer, move){
+        //shallow copying
+        //var newGrid = grid.map(row =>row.map(cell => ({...cell})));
+        //var newBuffer = buffer.map(row =>row.map(cell => ({...cell})));
+
+        //deep copying
+        var newGrid = JSON.parse(JSON.stringify(grid));
+        var newBuffer = JSON.parse(JSON.stringify(buffer));
+        var container;
+
+        if (move.oldGrid == "grid"){
+            container = JSON.parse(JSON.stringify(newGrid[move.oldRow][move.oldColumn]));
+            newGrid[move.oldRow][move.oldColumn] = {name: "UNUSED", w: 0};
+            
+        }
+        else if (move.oldGrid == "buffer"){
+            container = JSON.parse(JSON.stringify(newBuffer[move.oldRow][move.oldColumn]));
+            newBuffer[move.oldRow][move.oldColumn] = {name: "UNUSED", w: 0};
+            
+        }
+
+        if (move.newGrid == "grid"){
+            newGrid[move.newRow][move.newColumn]= container;
+        }
+        else if (move.newGrid == "buffer"){
+            newBuffer[move.newRow][move.newColumn]= container;
+        }
+
+        return [newGrid, newBuffer];
     }
 
 

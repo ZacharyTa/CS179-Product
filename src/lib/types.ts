@@ -1,4 +1,3 @@
-
 // [row, col], {weight}, itemName
 export interface Container {
   index?: number;
@@ -20,11 +19,12 @@ export interface InputOperation {
 
 //[{type, name, time, oldRow, oldColumn, newRow, newColumn}, ...]
 export interface OutputLoadOperation {
-  type: "offload" | "onload" | "move";
-  name: string,
-  time: number,
-  oldRow: number,
-  oldColumn: number,
-  newRow: number,
-  newColumn: number,
+  type: "offload" | "onload" | "move" | "buffer";
+  name: string;
+  time: number;
+  oldRow: number;
+  oldColumn: number;
+  newRow: number;
+  newColumn: number;
+  weight?: number;
 }

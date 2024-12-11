@@ -1,14 +1,27 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { setSignedInWorker, getSignedInWorker } from "@/utils/signInCookies";
+import { getOperations } from "@/utils/operationCookies";
+import { addLog } from "@/utils/logCookies";
 
 export default function SignInPage() {
   const router = useRouter();
   const [name, setName] = useState<string>("");
 
   const handleSignIn = () => {
-    if (name?.toLocaleLowerCase() === "zachary")
+    if (name === "") return;
+
+    if (getSignedInWorker()) addLog(`${getSignedInWorker()} signs out`);
+    addLog(`${name} signs in`);
+    setSignedInWorker(name);
+
+    //If operation still doing stuff then resume
+    if (getOperations().length > 0) {
+      router.push("/balance");
+    } else {
       router.push("/manifest-upload");
+    }
   };
 
   return (

@@ -1,6 +1,7 @@
 // logic for handling the A* search algo smth
 import {Problem, Node, processData, hashGrid} from './problem.js'
 import {priorityQueue} from './priority.js'
+import {operateSift} from './Sift.js'
 
 /**
  * costs:
@@ -411,11 +412,6 @@ function isSolvable(ship){
 
 }
 
-function SIFT (ship){ //for the sake of testing that it returns []
-    return [];
-}
-
-
 //helper function to initialize buffer
 function initialBuffer(){ //only 4 x 24
     var b = [];
@@ -468,7 +464,7 @@ export default function handleBalancing(manifestText) {
     //check for solvability, if not, call SIFT
     var solvability = isSolvable(ship);
     if (!solvability){
-        solutionPath = SIFT(ship);
+        solutionPath = operateSift(ship);
         return solutionPath;
     }
     console.log("buffer enable status: ", enable);

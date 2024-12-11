@@ -1,8 +1,8 @@
+
 //class to represent Problem states (tree structure)
 class Problem{
     
-    // constructor(ship, buffer){
-    constructor(ship, buffer){        
+    constructor(ship, time){         //current state
         this.grid = ship;
         this.buffer = buffer;
    
@@ -129,8 +129,10 @@ function processData(manifestText){
         var w = parseInt(info[2].trim().replace(/[^\d]/g ,""), 10);
         var name = info[3].trim();
 
-        if (row >= 0 && row < 8 && col >= 0 && col < 12){
-            grid[row][col] = {w, name}; //@ each grid, has weight and name
+        //contents needs to flip when stored in to grid
+        var flip = 7 - row;
+        if (flip >= 0 && flip < 8 && col >= 0 && col < 12){
+            grid[flip][col] = {w, name}; //@ each grid, has weight and name
         }
     });
     
@@ -143,5 +145,5 @@ function processData(manifestText){
 //info[2] = "string"
 
 
+export {Problem, processData}
 
-export {Problem, Node, processData, hashGrid}

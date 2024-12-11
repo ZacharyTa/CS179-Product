@@ -107,11 +107,19 @@ class Node{
 
 
 //need to make hasing for 2d object 
-function hashGrid(grid) {
+function hashGrid(problem) {
+    let grid = problem.grid;
+    let buffer = problem.buffer;
     let hash = '';
     for (let i = 0; i < grid.length; i++) {
         for (let j = 0; j < grid[i].length; j++) {
             let cell = grid[i][j];
+            hash += `${i}-${j}-${cell.name}-${cell.w}|`;
+        }
+    }
+    for (let i = 0; i < buffer.length; i++) {
+        for (let j = 0; j < buffer[i].length; j++) {
+            let cell = buffer[i][j];
             hash += `${i}-${j}-${cell.name}-${cell.w}|`;
         }
     }

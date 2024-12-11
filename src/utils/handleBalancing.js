@@ -46,7 +46,14 @@ function checkBalance(weights) {
 //TODO: might need to add another row on top for calculations, shouldnt be too had
 //find time between 2 points, with takng obstacles into mind
 //update 
-export function findTime(grid, r, c, i ,j){
+export function findTime(input_grid, r, c, i ,j){
+    let grid = input_grid.map(row => [...row]);
+    let top_row = [];
+    for (let i =0; i < input_grid[0].length; i++){
+        top_row.push({"w":0, "name":"UNUSED"});
+    }
+    grid.push(top_row);
+    
     //directions
     var dir = [ {row: 1, col: 0 },
                 {row: -1, col: 0},
@@ -309,7 +316,7 @@ export default function handleBalancing(manifestText) {
             break;  
         }
         
-        var gridHash = hashGrid(currNode.problem.grid);
+        var gridHash = hashGrid(currNode.problem);
         if(!visited.has(gridHash) || visited.get(gridHash) > currNode.cost){
             visited.set(gridHash, currNode.cost); 
 

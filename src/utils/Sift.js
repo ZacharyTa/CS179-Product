@@ -56,12 +56,9 @@ function findAvailableColumnSlot(grid, col){
 }
 
 function validateMoves(state, source, row, col) { 
-    console.log(state, source, row, col);
-    debugger;
-   
+    //console.log(state, source, row, col);
     var moves = []; 
     var number_of_moves = 0;
-
     var grid = state.grid;
     var buffer = state.buffer;
 
@@ -85,7 +82,7 @@ function validateMoves(state, source, row, col) {
             if (source == "grid")
                 t = findTime(grid, row, col, targetRow, j); // Find time with obstacles
             if (source == "buffer"){
-                let source_to_pink = findTime(buffer, row, col, 8, 0);
+                let source_to_pink = findTime(buffer, row, col, 4, 0);
                 let pink_to_target = findTime(grid, 8, 0, targetRow, j)
                 t = source_to_pink + 4 + pink_to_target;
             }
@@ -107,9 +104,9 @@ function validateMoves(state, source, row, col) {
        
     }
     //if couldnt find enough unused slots in grid, find moves in buffer.
-    if (number_of_moves <= 8){ //8 is just the cap. can be lower, higher, adjust later
+    if (number_of_moves <= 4){ //8 is just the cap. can be lower, higher, adjust later
         //for each column
-        for (var i = 0; i < 24; i++){
+        for (var i = 0; i < 4+number_of_moves; i++){
             if (source == "buffer" && i===col) continue;
             //find lowest available cell per column
             let targetRow = findAvailableColumnSlot(buffer, i);
@@ -120,10 +117,10 @@ function validateMoves(state, source, row, col) {
                 var t = -1;
 
                 if (source == "buffer")
-                    t = findTime(grid, row, col, targetRow, i); // Find time with obstacles
+                    t = findTime(buffer, row, col, targetRow, i); // Find time with obstacles
                 if (source == "grid"){
                     let source_to_pink = findTime(grid, row, col, 8, 0);
-                    let pink_to_target = findTime(buffer, 8, 0, targetRow, i)
+                    let pink_to_target = findTime(buffer, 4, 0, targetRow, i)
                     t = source_to_pink + 4 + pink_to_target;
                 }
 
@@ -144,7 +141,6 @@ function validateMoves(state, source, row, col) {
             }
         }
     }
-
     return moves;
 }
 
@@ -186,9 +182,7 @@ export function obtainGoalState(ship){
                     new_grid[i][j] = sorted_crates.shift();
                 }
             }
-
         }
-
       }
       console.log("GOAL : ", new_grid);
       return new_grid;
@@ -199,6 +193,7 @@ export function obtainGoalState(ship){
 export function isSifted(grid, target){
     for (let i =0; i< grid.length; i++){
         for (let j = 0; j< grid[i].length; j++){
+            //console.log(grid[i][j].w, target[i][j].w);
             if (grid[i][j].w!= target[i][j].w){ //only weight matters, name doesnt.
                 return false;
             }
@@ -232,17 +227,11 @@ export function operateSift(ship){
     console.log("root: ", root);
     let counter = 0;
     while (!frontier.isEmpty()){
-        counter+=1;
-        var current = frontier.dequeue();
-        console.log(current.move);
-
-        if (counter >0){
-            
-            counter = 0;
-            debugger;
-        }
         
-
+        var current = frontier.dequeue();
+        
+        //console.log("found: ", current.move);
+       //debugger;
         if (isSifted(current.problem.grid, target)){
             console.log("SIFTED: ", current);
 
@@ -273,11 +262,22 @@ export function operateSift(ship){
         }
 
         //now i need to hash the grid into a key and add it to the visited map.
-        var gridHash = hashGrid(current.problem.grid);
-
+        var gridHash = hashGrid(current.problem);
+        
         if (!visited.has(gridHash) || visited.get(gridHash) > current.cost){
             visited.set(gridHash, current.cost);
+            counter+=1;
             
+            console.log(0);
+            //console.log(current);
+            if (counter >1000){
+            
+                counter = 0;
+
+                console.log(current);
+               // debugger;
+                
+            }
             
 
             //now i must get all possible moves, and begin astar tree building.
@@ -285,38 +285,27 @@ export function operateSift(ship){
             var all_possible_moves_from_current_state =  getMoves(current.problem); //push buffer as well
 
             
-           
+           //EXPAND NODE
             for (var single_container_all_moves of all_possible_moves_from_current_state){
                 for (var move of single_container_all_moves.moves){
                     
-                    //var newGrid = current.problem.getNewGrid(current.problem.grid, move);
-                    //var newBuffer = current.problem.getNewGrid(current.problem.buffer, move);
                     var [newGrid, newBuffer] = current.problem.getNewGrids(current.problem.grid, current.problem.buffer, move);
-                    //console.log("new grid: ", newGrid);
-                    //console.log("new buffer: ", newBuffer);
                     var newProblem = new Problem(newGrid, newBuffer);
 
-         
+                    //i removed crane implementation but will re-add TODO
                     var craneMove = null;
 
-                    //INIT POSITION
-
-
-                    var newCost = current.cost + move.cost;
+                
+                    var newCost = current.cost + move.cost; //+ cranetime;
                     var child = new Node(newProblem, current, move, newCost, craneMove);
 
-                    //put new heuristic here..
                     const h = heuristic(move, newProblem, target);
-
                     var priority = newCost+h;
 
                     frontier.enqueue(child, priority);
                 }
             }
         }
-
-
-        
     }
 
     return solutionPath.map((move)=>({
@@ -331,41 +320,69 @@ export function operateSift(ship){
 }
 
 //two heuristic ideas
-function heuristic(move, grid, goal){
+function heuristic(move, problem, goal){
     //compare the new container.
     //find move coordinates in goal.
+    
+    let h1 = heuristic_local(move, goal);
+    let h2 = heuristic_state(move, problem.grid, goal);
+    let h3 = heuristic_buffer(problem, move);
+    
+    return (h1+h2+h3);
+}
+
+
+
+//heuristic that judges the single move
+function heuristic_local(move, goal){
     let min_distance = Infinity;
     for (let i = 0; i < goal.length; i++){
         for (let j =0; j< goal[i].length; j++){
             if (move.weight == goal[i][j].w){
                 //get distance
-                const distance = Math.abs(move.newColumn - j)+ Math.abs(move.newRow-i);
-                min_distance = Math.min(distance ,min_distance)
+                if (move["newGrid"]=="grid"){
+                    const distance = Math.abs(move.newColumn - j)+ Math.abs(move.newRow-i);
+                    min_distance = Math.min(distance ,min_distance)
+                }
+                
+                else if (move["newGrid"] == "buffer"){
+                    const distance1 = Math.abs(j - 0)+ Math.abs(i-8);
+                    const distance2 = Math.abs(move.newColumn - 0)+ Math.abs(move.newRow-4);
+                    min_distance = Math.min(distance1+distance2+4,min_distance)
+                }
+                    
+                
+                
+               
             }
         }
     }
 
     return min_distance;
-
-    
-
 }
 
-function heuristic_better(move, grid, goal){
-    for (let i =0; i< goal.length; i++){
-        
+//judges similarity to goal state of whole grid
+function heuristic_state(move, grid, goal){
+    let cost = 0;
+    for (let i = 0; i < goal.length; i++){
+        for (let j = 0; j < goal[i].length; j++){
+            if (goal[i][j]["w"] != grid[i][j]["w"]){
+                cost+=1;
+            }
+        }
     }
+
+    return cost;
 }
 
+//if state is close, go for it.
+//PUNISH BUFFER TO BUFFER MOVEMENT.
+function heuristic_buffer(problem, move){
+    let cost = 0;
+    if (!problem.bufferEmpty() && move["oldGrid"]=="buffer" && move["newGrid"]=="buffer"){
+        
+        cost+=10;
+    }
+    return cost;
+}
 
-//for balancing, new_cost = cost_thus_far + cost to get here
-//prio = new_cost + heuristic
-
-//what the hell is the heuristic
-//all operators : every single posible move for every state
-    //then, grab the most optimal time? this would suck though
-
-
-    //astar
-
-    //get all possible moves. add to PQ if not visited or better cost. with PQ its pretty good. ok.

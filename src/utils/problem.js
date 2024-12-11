@@ -13,22 +13,55 @@ class Problem{
     getTime(){return this.time;}
 
     //function to return a grid with a new move; 
-    getNewGrid(grid, move){
-        var newGrid = grid.map(row =>row.map(cell => ({...cell})));
+    //still need to distinguish RIP
+    // getNewGrid(grid, move){
+    //     var newGrid = grid.map(row =>row.map(cell => ({...cell})));
 
-        var container = newGrid[move.oldRow][move.oldColumn];
-        newGrid[move.oldRow][move.oldColumn] = {name: "UNUSED", w: 0}; //old spot should now be unused
-        newGrid[move.newRow][move.newColumn]= container;
+    //     if(move.name === "UNUSED0jjjj"){
+    //         console.log("getNewGrid called")
+    //     console.log("m; ", move)
+    
+    //     }
 
-        return (newGrid);
 
+    //     var container = newGrid[move.oldRow][move.oldColumn];
+     
+    //     newGrid[move.oldRow][move.oldColumn] = {name: "UNUSED", w: 0}; //old spot should now be unused
+    //     newGrid[move.newRow][move.newColumn]= container;
+
+    //     return (newGrid);
+
+    // }
+
+ getNewGrid(grid, move) {
+        const newGrid = grid.map(row => row.map(cell => ({ ...cell })));
+        // Validate move indices
+        if (
+            move.newRow < 0 || move.newRow >= newGrid.length ||
+            move.newColumn < 0 || move.newColumn >= newGrid[0].length ||
+            move.oldRow < 0 || move.oldRow >= newGrid.length ||
+            move.oldColumn < 0 || move.oldColumn >= newGrid[0].length
+        ) {
+            throw new Error(`Invalid move indices: ${JSON.stringify(move)}`);
+        }
+    
+        // Perform the move
+        const container = newGrid[move.oldRow][move.oldColumn];
+        newGrid[move.oldRow][move.oldColumn] = { name: "UNUSED", w: 0 };
+        newGrid[move.newRow][move.newColumn] = container;
+    
+        return newGrid;
     }
+    
+
+    
+
 
     bufferEmpty(){
 
         for(var i = 0; i < this.buffer.length; i++){
             for(var j = 0; j < this.buffer[i].length; j++){
-                if (this.buffer[i][j] !== "UNUSED"){
+                if (this.buffer[i][j].name !== "UNUSED"){
                     return false;
                 }
             }

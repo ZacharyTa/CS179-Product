@@ -5,12 +5,15 @@ class Problem{
     constructor(ship, buffer){        
         this.grid = ship;
         this.buffer = buffer;
-   
     }
 
     // setTime(time) { this.time = time;}
     getGrid(){return this.grid;}
     getTime(){return this.time;}
+
+    bufferEmpty(){
+        return this.buffer.every(row => row.every(cell => cell === "UNUSED"))
+    }
 
     //function to return a grid with a new move; 
     //still need to distinguish RIP
@@ -69,8 +72,6 @@ class Problem{
 
         return true;
     }
-
-    
 }
 
 

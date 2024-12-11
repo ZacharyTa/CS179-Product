@@ -92,7 +92,7 @@ class Node{
     
             //add crane move
             if (currNode.craneMove != null && !isNaN(currNode.craneMove.newRow) && !isNaN(currNode.craneMove.newColumn)) {
-                path.unshift(currNode.craneMove);
+                //path.unshift(currNode.craneMove);
             }
     
             currNode = currNode.parent;

@@ -45,6 +45,7 @@ function checkBalance(weights) {
 
 //TODO: might need to add another row on top for calculations, shouldnt be too had
 //find time between 2 points, with takng obstacles into mind
+//update 
 export function findTime(grid, r, c, i ,j){
     //directions
     var dir = [ {row: 1, col: 0 },

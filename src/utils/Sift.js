@@ -56,6 +56,8 @@ function findAvailableColumnSlot(grid, col){
 }
 
 function validateMoves(state, source, row, col) { 
+    console.log(state, source, row, col);
+    debugger;
    
     var moves = []; 
     var number_of_moves = 0;
@@ -105,9 +107,9 @@ function validateMoves(state, source, row, col) {
        
     }
     //if couldnt find enough unused slots in grid, find moves in buffer.
-    if (number_of_moves <= 5){ //5 is just the cap. can be lower, higher, adjust later
+    if (number_of_moves <= 8){ //8 is just the cap. can be lower, higher, adjust later
         //for each column
-        for (var i = 0; i < 24-number_of_moves; i++){
+        for (var i = 0; i < 24; i++){
             if (source == "buffer" && i===col) continue;
             //find lowest available cell per column
             let targetRow = findAvailableColumnSlot(buffer, i);
@@ -232,6 +234,14 @@ export function operateSift(ship){
     while (!frontier.isEmpty()){
         counter+=1;
         var current = frontier.dequeue();
+        console.log(current.move);
+
+        if (counter >0){
+            
+            counter = 0;
+            debugger;
+        }
+        
 
         if (isSifted(current.problem.grid, target)){
             console.log("SIFTED: ", current);
@@ -286,42 +296,11 @@ export function operateSift(ship){
                     //console.log("new buffer: ", newBuffer);
                     var newProblem = new Problem(newGrid, newBuffer);
 
-                    var craneTime = 0;
+         
                     var craneMove = null;
 
                     //INIT POSITION
-                    if (current.cost === 0){ //when crane should start at initial position 
-                        //since from top, just manhattan distance
-                        craneTime = Math.abs(8 - move.oldRow) + Math.abs(0 - move.oldColumn);
-                        craneMove = {
-                            type: "move",
-                            name: "crane",
-                            oldRow: 8, //will print 9 instead
-                            oldColumn: 0, 
-                            newRow: move.oldRow, 
-                            newColumn: move.oldColumn,
-                            time: craneTime
-                        };
-                    } 
-                    else{ //Creates a crane movement instruction inbetween crate instructions
 
-                        //maybe this needs adjusting? double check if this is right, i dont understand why cost would change this so hard.
-                        var mm = current.getMove();
-                        var cm = current.getCraneMove();
-                        //oly compute crane if mm.name != cm Move name! (container changes)
-                        if ( !cm || cm.name !== mm.name && (mm.newRow !== move.oldRow || mm.newColumn !== move.oldColumn)) {
-                            craneTime =  findTime(newGrid, mm.newRow, mm.newColumn, move.oldRow, move.oldColumn);
-                            craneMove = {
-                                type: "move",
-                                name: "crane",
-                                oldRow: mm.newRow, 
-                                oldColumn: mm.newColumn, 
-                                newRow: move.oldRow, 
-                                newColumn: move.oldColumn,
-                                time: craneTime
-                            };
-                        } 
-                    }
 
                     var newCost = current.cost + move.cost;
                     var child = new Node(newProblem, current, move, newCost, craneMove);
@@ -370,6 +349,12 @@ function heuristic(move, grid, goal){
 
     
 
+}
+
+function heuristic_better(move, grid, goal){
+    for (let i =0; i< goal.length; i++){
+        
+    }
 }
 
 

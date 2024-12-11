@@ -1,5 +1,5 @@
-// this will handle the manifest data, updating it should rerender components its mounted with whenver manifestData updates
-// (via uploading manifest file through file upload component using daisyui )
+// this will handle the buffer data, updating it should rerender components its mounted with whenver bufferData updates
+// (via uploading buffer file through file upload component using daisyui )
 
 // [row, col], {weight}, item
 // ...
@@ -7,19 +7,19 @@
 // [08,12], {00000}, UNUSED
 // ....
 
-// input: manifestText raw text data -> Useable data format
+// input: bufferText raw text data -> Useable data format
 // perform some sort of simple data extraction algorithm
 
 import { ManifestData, Container } from "@/lib/types";
 
-export default function useManifestData(manifestText: string): ManifestData {
+export default function useBufferData(bufferText: string): ManifestData {
   // variables
-  const maxRow = 8;
-  const maxCol = 12;
+  const maxRow = 4;
+  const maxCol = 24;
   const containers: Container[] = [];
 
-  const lines = manifestText.split("\n");
-  if (manifestText) {
+  const lines = bufferText.split("\n");
+  if (bufferText) {
     for (const line of lines) {
       // [row, col], {weight}, item
       const data = line.split(",");

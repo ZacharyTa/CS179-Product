@@ -48,7 +48,7 @@ export default function SelectionPage() {
           </div>
         )}
         {isLoading && (
-          <span className="loading loading-spinner loading-lg"></span>
+          <span className="loading loading-spinner loading-lg text-primary"></span>
         )}
       </div>
     </Layout>

@@ -1,5 +1,5 @@
 // logic for handling the A* search algo smth
-import {Problem, Node, processData, hashGrid} from './problem.js'
+import { processData, hashGrid} from './problem.js'
 import {priorityQueue} from './priority.js'
 import {operateSift} from './Sift.js'
 
@@ -9,6 +9,106 @@ import {operateSift} from './Sift.js'
  * transfer betw them: 4
  * bufferzone: reflect over x axis, EX: most right bottom corner" (1,-1)
  */
+
+
+/**
+ * for now:
+ * 
+ */
+//class to represent Problem states (tree structure)
+class Problem{
+    
+    // constructor(ship, buffer){
+    constructor(ship, buffer){        
+        this.grid = ship;
+        this.buffer = buffer;
+   
+    }
+
+    // setTime(time) { this.time = time;}
+    getGrid(){return this.grid;}
+    getTime(){return this.time;}
+
+    //function to return a grid with a new move; 
+    //still need to distinguish RIP
+    getNewGrid(grid, move){
+        var newGrid = grid.map(row =>row.map(cell => ({...cell})));
+        var container = newGrid[move.oldRow][move.oldColumn];
+     
+        newGrid[move.oldRow][move.oldColumn] = {name: "UNUSED", w: 0}; //old spot should now be unused
+        newGrid[move.newRow][move.newColumn]= container;
+
+        return (newGrid);
+
+    }
+
+
+
+    bufferEmpty(){
+
+        for(var i = 0; i < this.buffer.length; i++){
+            for(var j = 0; j < this.buffer[i].length; j++){
+                if (this.buffer[i][j].name !== "UNUSED"){
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    
+}
+
+
+//Node structure 
+class Node{
+
+    constructor(problem, parent, move, cost, craneMove, bufferMove){
+    // constructor(problem, parent, move, cost, bufferMove){
+        this.problem = problem;         
+        this.parent = parent; 
+        this.move = move,
+        this.cost = cost;
+        this.craneMove = craneMove; //only if the containers are different
+                                    //else pass [] (gets taken care of in path())
+        this.bufferMove = bufferMove;
+        
+    }
+
+    getCraneMove (){ return this.craneMove;}
+    getMove(){return this.move; }
+    getBufferMove(){return this.bufferMove}
+
+
+    path() {
+        const path = [];
+        let currNode = this;
+    
+        //add container move
+        while (currNode.parent != null) {
+            if (currNode.move != null && !isNaN(currNode.move.newRow) && !isNaN(currNode.move.newColumn)) {
+                path.unshift(currNode.move);
+                //add crane time
+                if (currNode.craneMove != null && !isNaN(currNode.craneMove.newRow) && !isNaN(currNode.craneMove.newColumn)) {
+                    //path.unshift(currNode.craneMove);
+                    currNode.move.time = (currNode.move.time || 0) + currNode.craneMove.time;
+                }
+            }
+
+            //add buffer move
+            if (currNode.bufferMove != null && !isNaN(currNode.bufferMove.newRow) && !isNaN(currNode.bufferMove.newColumn)) {
+                path.unshift(currNode.craneMove);
+            }
+
+            currNode = currNode.parent;
+        }
+    
+        return path;
+    }
+    
+
+}
 
 
 //global var
@@ -577,7 +677,7 @@ export default function handleBalancing(manifestText) {
                         var cm = currNode.getCraneMove();
                         //only compute crane if mm.name != cm Move name! (container changes)
                         if (  !cm || cm.name !== mm.name && (mm.newRow !== i.oldRow || mm.newColumn !== i.oldColumn)) {
-                            if (mm.type === "move" && cm.type === "move"){
+                            if (mm.type === "move"){
                                 craneTime =  findTime(newGrid, mm.newRow, mm.newColumn, i.oldRow, i.oldColumn);
                             }
                             craneMove = {

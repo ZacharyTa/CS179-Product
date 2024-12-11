@@ -1,30 +1,63 @@
-
 //class to represent Problem states (tree structure)
 class Problem{
     
-    constructor(ship, time){         //current state
+    // constructor(ship, buffer){
+    constructor(ship, buffer){        
         this.grid = ship;
         this.buffer = buffer;
-   
     }
 
     // setTime(time) { this.time = time;}
     getGrid(){return this.grid;}
     getTime(){return this.time;}
 
-    //function to return a grid with a new move; 
-    //still need to distinguish RIP
-    getNewGrid(grid, move){
-        var newGrid = grid.map(row =>row.map(cell => ({...cell})));
-        var container = newGrid[move.oldRow][move.oldColumn];
-     
-        newGrid[move.oldRow][move.oldColumn] = {name: "UNUSED", w: 0}; //old spot should now be unused
-        newGrid[move.newRow][move.newColumn]= container;
-
-        return (newGrid);
-
+    bufferEmpty(){
+        return this.buffer.every(row => row.every(cell => cell === "UNUSED"))
     }
 
+    //function to return a grid with a new move; 
+    //still need to distinguish RIP
+    // getNewGrid(grid, move){
+    //     var newGrid = grid.map(row =>row.map(cell => ({...cell})));
+
+    //     if(move.name === "UNUSED0jjjj"){
+    //         console.log("getNewGrid called")
+    //     console.log("m; ", move)
+    
+    //     }
+
+
+    //     var container = newGrid[move.oldRow][move.oldColumn];
+     
+    //     newGrid[move.oldRow][move.oldColumn] = {name: "UNUSED", w: 0}; //old spot should now be unused
+    //     newGrid[move.newRow][move.newColumn]= container;
+
+    //     return (newGrid);
+
+    // }
+
+ getNewGrid(grid, move) {
+        const newGrid = grid.map(row => row.map(cell => ({ ...cell })));
+        // Validate move indices
+        if (
+            move.newRow < 0 || move.newRow >= newGrid.length ||
+            move.newColumn < 0 || move.newColumn >= newGrid[0].length ||
+            move.oldRow < 0 || move.oldRow >= newGrid.length ||
+            move.oldColumn < 0 || move.oldColumn >= newGrid[0].length
+        ) {
+            throw new Error(`Invalid move indices: ${JSON.stringify(move)}`);
+        }
+    
+        // Perform the move
+        const container = newGrid[move.oldRow][move.oldColumn];
+        newGrid[move.oldRow][move.oldColumn] = { name: "UNUSED", w: 0 };
+        newGrid[move.newRow][move.newColumn] = container;
+    
+        return newGrid;
+    }
+    
+
+    
 
 
     bufferEmpty(){
@@ -39,8 +72,6 @@ class Problem{
 
         return true;
     }
-
-    
 }
 
 
@@ -129,10 +160,8 @@ function processData(manifestText){
         var w = parseInt(info[2].trim().replace(/[^\d]/g ,""), 10);
         var name = info[3].trim();
 
-        //contents needs to flip when stored in to grid
-        var flip = 7 - row;
-        if (flip >= 0 && flip < 8 && col >= 0 && col < 12){
-            grid[flip][col] = {w, name}; //@ each grid, has weight and name
+        if (row >= 0 && row < 8 && col >= 0 && col < 12){
+            grid[row][col] = {w, name}; //@ each grid, has weight and name
         }
     });
     
@@ -145,5 +174,5 @@ function processData(manifestText){
 //info[2] = "string"
 
 
-export {Problem, processData}
 
+export {Problem, Node, processData, hashGrid}

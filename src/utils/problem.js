@@ -4,8 +4,7 @@ class Problem{
     // constructor(ship, buffer){
     constructor(ship, buffer){        
         this.grid = ship;
-        this.buffer = buffer; //might remove this, not sure yet, if so will also delete setBuffer() & bufferEmpty()
-        // this.time = time; this will be stored with Node instead
+        this.buffer = buffer;
     }
 
 
@@ -18,15 +17,46 @@ class Problem{
     }
 
     //function to return a grid with a new move; 
-    getNewGrid(grid, move){
-        var newGrid = grid.map(row =>row.map(cell => ({...cell})));
-        var container = newGrid[move.oldRow][move.oldColumn];
-        newGrid[move.oldRow][move.oldColumn] = {name: "UNUSED", w: 0}; //old spot should now be unused
-        newGrid[move.newRow][move.newColumn]= container;
+    //still need to distinguish RIP
+    // getNewGrid(grid, move){
+    //     var newGrid = grid.map(row =>row.map(cell => ({...cell})));
 
-        return (newGrid);
+    //     if(move.name === "UNUSED0jjjj"){
+    //         console.log("getNewGrid called")
+    //     console.log("m; ", move)
+    
+    //     }
 
+
+    //     var container = newGrid[move.oldRow][move.oldColumn];
+     
+    //     newGrid[move.oldRow][move.oldColumn] = {name: "UNUSED", w: 0}; //old spot should now be unused
+    //     newGrid[move.newRow][move.newColumn]= container;
+
+    //     return (newGrid);
+
+    // }
+
+ getNewGrid(grid, move) {
+        const newGrid = grid.map(row => row.map(cell => ({ ...cell })));
+        // Validate move indices
+        if (
+            move.newRow < 0 || move.newRow >= newGrid.length ||
+            move.newColumn < 0 || move.newColumn >= newGrid[0].length ||
+            move.oldRow < 0 || move.oldRow >= newGrid.length ||
+            move.oldColumn < 0 || move.oldColumn >= newGrid[0].length
+        ) {
+            throw new Error(`Invalid move indices: ${JSON.stringify(move)}`);
+        }
+    
+        // Perform the move
+        const container = newGrid[move.oldRow][move.oldColumn];
+        newGrid[move.oldRow][move.oldColumn] = { name: "UNUSED", w: 0 };
+        newGrid[move.newRow][move.newColumn] = container;
+    
+        return newGrid;
     }
+    
 
     getNewGrids(grid, buffer, move){
         //shallow copying
@@ -59,26 +89,24 @@ class Problem{
         return [newGrid, newBuffer];
     }
 
-
-    setBuffer(nex, newY, name){}
+        return true;
+    }
 }
 
 //Node structure 
 class Node{
-
     constructor(problem, parent, move, cost, craneMove){
         this.problem = problem;         
         this.parent = parent; 
         this.move = move,
         this.cost = cost;
         this.craneMove = craneMove //only if the containers are different
-                                    //else pass [] (gets taken care of in path())
+                                    //else pass [] (gets taken care of in path()
         
     }
 
     getCraneMove (){ return this.craneMove;}
     getMove(){return this.move; }
-
 
     path() {
         const path = [];
@@ -94,7 +122,6 @@ class Node{
             if (currNode.craneMove != null && !isNaN(currNode.craneMove.newRow) && !isNaN(currNode.craneMove.newColumn)) {
                 //path.unshift(currNode.craneMove);
             }
-    
             currNode = currNode.parent;
         }
     
@@ -163,5 +190,5 @@ function processData(manifestText){
 //info[2] = "string"
 
 
-export {Problem, Node, processData, hashGrid}
 
+export {Problem, Node, processData, hashGrid}

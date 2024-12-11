@@ -182,51 +182,54 @@ function addMoves(parent, moves, ship, i, j, operations) {
         } else {
           dist += Math.abs(r - i) + Math.abs(c - j);
         }
-      } else {
-        dist += Math.abs(8 - i) + Math.abs(0 - j);
-      }
-      let m = {
-        type: "offload",
-        name: op.name,
-        time: dist,
-        oldRow: i,
-        oldColumn: j,
-        newRow: -1,
-        newColumn: -1,
-      };
-      let newGrid = ship.map((row) => row.map((cell) => ({ ...cell })));
-      newGrid[i][j] = { w: 0, name: "UNUSED" };
-      let problem = new Problem(newGrid, parent.problem.buffer);
-      newOps.push(check[0]);
-      moves.push({
-        move: m,
-        problem: problem,
-        parent: parent,
-        ops: newOps,
-        cost: dist + getCost(parent, operations),
-      });
-    }
-  } else if (targetBelow(ship, i, j, operations)) {
-    let newOps = Array.from(parent.ops);
-    let open = findOpenCells(ship);
-    if (open.length == 0) {
-      addBufferMove(parent, moves, ship, i, j, operations);
-    }
-    for (let k = 0; k < open.length; k++) {
-      let row = open[k][0];
-      let col = open[k][1];
-      let dist = Math.abs(row - i) + Math.abs(col - j);
-      if (parent.move != null) {
-        console.log(parent.move);
-        let r = 0;
-        let c = 0;
-        if (parent.move.newRow == -1) {
-          r = 9;
-          c = 0;
-        } else {
-          r = findObstacles(ship, parent.move.newRow, parent.move.newColumn, j);
-          console.log(r);
-          c = parent.move.newColumn;
+        for(let k = 0; k < open.length; k++){
+            let row = open[k][0];
+            let col = open[k][1];
+            console.log(`Row: ${row}`);
+            console.log(col);
+            if(ship[i][j].name == "Cat"){
+                console.log(`curr i: ${i}`);
+                console.log(j);
+            }
+            if(col === j) {
+                continue;
+            }
+            let dist = Math.abs(row - i) + Math.abs(col - j);
+            if(parent.move != null) {
+                console.log(parent.move)
+                let r = 0;
+                let c = 0;
+                if(parent.move.newRow == -1){
+                    r = 8;
+                    c = 0;
+                }else {
+                    r = findObstacles(ship, parent.move.newRow, parent.move.newColumn, j);
+                    console.log(r);
+                    c = parent.move.newColumn;
+                }
+                dist += Math.abs(r - i) + Math.abs(c - j);
+            }else {
+                dist += Math.abs(8 - i) + Math.abs(0 - j);
+            }
+            let n = ship[i][j].name;
+            let m = {
+                type: "move",
+                name: n,
+                time: dist,
+                oldRow: i,
+                oldColumn: j,
+                newRow: row,
+                newColumn: col,
+            };
+            let newGrid = parent.problem.getNewGrid(ship, m);
+            let newProblem = new Problem(newGrid, parent.problem.buffer);
+            moves.push({
+                move: m,
+                problem: newProblem,
+                parent: parent,
+                ops: newOps,
+                cost: dist + getCost(parent, operations),
+            })
         }
         dist += Math.abs(r - i) + Math.abs(c - j);
       } else {
@@ -521,107 +524,108 @@ export default function handleLoading(manifestText, operations) {
 }
 
 let text = `\
-[01,01], {00000}, NAN
-[01,02], {00060}, Catfish
-[01,03], {00020}, Dogana
-[01,04], {00020}, Batons
-[01,05], {00000}, Cat
-[01,06], {00000}, Cat
-[01,07], {00000}, Cat
-[01,08], {00000}, Cat
-[01,09], {00000}, Cat
-[01,10], {00000}, Cat
-[01,11], {00000}, Cat
-[01,12], {00000}, NAN
-[02,01], {00000}, Cat
-[02,02], {00020}, Rations for US Army
-[02,03], {00000}, Cat
-[02,04], {00000}, Cat
-[02,05], {00000}, Cat
-[02,06], {00000}, Cat
-[02,07], {00000}, Cat
-[02,08], {00000}, Cat
-[02,09], {00000}, Cat
-[02,10], {00000}, Cat
-[02,11], {00000}, Cat
-[02,12], {00000}, Cat
-[03,01], {00000}, Cat
-[03,02], {00000}, Cat
-[03,03], {00000}, Cat
-[03,04], {00000}, Cat
-[03,05], {00000}, Cat
-[03,06], {00000}, Cat
-[03,07], {00000}, Cat
-[03,08], {00000}, Cat
-[03,09], {00000}, Cat
-[03,10], {00000}, Cat
-[03,11], {00000}, Cat
-[03,12], {00000}, Cat
-[04,01], {00000}, Cat
-[04,02], {00000}, Cat
-[04,03], {00000}, Cat
-[04,04], {00000}, Cat
-[04,05], {00000}, Cat
-[04,06], {00000}, Cat
-[04,07], {00000}, Cat
-[04,08], {00000}, Cat
-[04,09], {00000}, Cat
-[04,10], {00000}, Cat
-[04,11], {00000}, Cat
-[04,12], {00000}, Cat
-[05,01], {00000}, Cat
-[05,02], {00000}, Cat
-[05,03], {00000}, Cat
-[05,04], {00000}, Cat
-[05,05], {00000}, Cat
-[05,06], {00000}, Cat
-[05,07], {00000}, Cat
-[05,08], {00000}, Cat
-[05,09], {00000}, Cat
-[05,10], {00000}, Cat
-[05,11], {00000}, Cat
-[05,12], {00000}, Cat
-[06,01], {00000}, Cat
-[06,02], {00000}, Cat
-[06,03], {00000}, Cat
-[06,04], {00000}, Cat
-[06,05], {00000}, Cat
-[06,06], {00000}, Cat
-[06,07], {00000}, Cat
-[06,08], {00000}, Cat
-[06,09], {00000}, Cat
-[06,10], {00000}, Cat
-[06,11], {00000}, Cat
-[06,12], {00000}, Cat
-[07,01], {00000}, Cat
-[07,02], {00000}, Cat
-[07,03], {00000}, Cat
-[07,04], {00000}, Cat
-[07,05], {00000}, Cat
-[07,06], {00000}, Cat
-[07,07], {00000}, Cat
-[07,08], {00000}, Cat
-[07,09], {00000}, Cat
-[07,10], {00000}, Cat
-[07,11], {00000}, Cat
-[07,12], {00000}, Apple
-[08,01], {00000}, Cat
-[08,02], {00000}, Cat
-[08,03], {00000}, Cat
-[08,04], {00000}, Cat
-[08,05], {00000}, Cat
-[08,06], {00000}, Cat
-[08,07], {00000}, Cat
-[08,08], {00000}, Cat
-[08,09], {00000}, Cat
-[08,10], {00000}, Cat
-[08,11], {00000}, Cat
-[08,12], {00000}, Cat`;
+[01,01], {10001}, Ewe
+[01,02], {00500}, Cow
+[01,03], {00600}, Dog
+[01,04], {00100}, Rat
+[01,05], {00000}, UNUSED
+[01,06], {00000}, UNUSED
+[01,07], {00000}, UNUSED
+[01,08], {00000}, UNUSED
+[01,09], {00000}, UNUSED
+[01,10], {00000}, UNUSED
+[01,11], {00000}, UNUSED
+[01,12], {00000}, UNUSED
+[02,01], {09041}, Cat
+[02,02], {00010}, Doe
+[02,03], {00000}, UNUSED
+[02,04], {00000}, UNUSED
+[02,05], {00000}, UNUSED
+[02,06], {00000}, UNUSED
+[02,07], {00000}, UNUSED
+[02,08], {00000}, UNUSED
+[02,09], {00000}, UNUSED
+[02,10], {00000}, UNUSED
+[02,11], {00000}, UNUSED
+[02,12], {00000}, UNUSED
+[03,01], {00000}, UNUSED
+[03,02], {00000}, UNUSED
+[03,03], {00000}, UNUSED
+[03,04], {00000}, UNUSED
+[03,05], {00000}, UNUSED
+[03,06], {00000}, UNUSED
+[03,07], {00000}, UNUSED
+[03,08], {00000}, UNUSED
+[03,09], {00000}, UNUSED
+[03,10], {00000}, UNUSED
+[03,11], {00000}, UNUSED
+[03,12], {00000}, UNUSED
+[04,01], {00000}, UNUSED
+[04,02], {00000}, UNUSED
+[04,03], {00000}, UNUSED
+[04,04], {00000}, UNUSED
+[04,05], {00000}, UNUSED
+[04,06], {00000}, UNUSED
+[04,07], {00000}, UNUSED
+[04,08], {00000}, UNUSED
+[04,09], {00000}, UNUSED
+[04,10], {00000}, UNUSED
+[04,11], {00000}, UNUSED
+[04,12], {00000}, UNUSED
+[05,01], {00000}, UNUSED
+[05,02], {00000}, UNUSED
+[05,03], {00000}, UNUSED
+[05,04], {00000}, UNUSED
+[05,05], {00000}, UNUSED
+[05,06], {00000}, UNUSED
+[05,07], {00000}, UNUSED
+[05,08], {00000}, UNUSED
+[05,09], {00000}, UNUSED
+[05,10], {00000}, UNUSED
+[05,11], {00000}, UNUSED
+[05,12], {00000}, UNUSED
+[06,01], {00000}, UNUSED
+[06,02], {00000}, UNUSED
+[06,03], {00000}, UNUSED
+[06,04], {00000}, UNUSED
+[06,05], {00000}, UNUSED
+[06,06], {00000}, UNUSED
+[06,07], {00000}, UNUSED
+[06,08], {00000}, UNUSED
+[06,09], {00000}, UNUSED
+[06,10], {00000}, UNUSED
+[06,11], {00000}, UNUSED
+[06,12], {00000}, UNUSED
+[07,01], {00000}, UNUSED
+[07,02], {00000}, UNUSED
+[07,03], {00000}, UNUSED
+[07,04], {00000}, UNUSED
+[07,05], {00000}, UNUSED
+[07,06], {00000}, UNUSED
+[07,07], {00000}, UNUSED
+[07,08], {00000}, UNUSED
+[07,09], {00000}, UNUSED
+[07,10], {00000}, UNUSED
+[07,11], {00000}, UNUSED
+[07,12], {00000}, UNUSED
+[08,01], {00000}, UNUSED
+[08,02], {00000}, UNUSED
+[08,03], {00000}, UNUSED
+[08,04], {00000}, UNUSED
+[08,05], {00000}, UNUSED
+[08,06], {00000}, UNUSED
+[08,07], {00000}, UNUSED
+[08,08], {00000}, UNUSED
+[08,09], {00000}, UNUSED
+[08,10], {00000}, UNUSED
+[08,11], {00000}, UNUSED
+[08,12], {00000}, UNUSED`;
 let testOperations = [
-  // {type: "onload", name: "Nat"},
-  // {type: "offload", name: "Batons"},
-  { type: "offload", name: "Apple" },
-  // {type: "onload", name: "Dog"},
-];
+    // {type: "onload", name: "Nat"},
+    // {type: "offload", name: "Batons"},
+    // {type: "offload", name: "Apple"},
+    {type:"offload", name: "Ewe"},
+    // {type: "onload", name: "Dog"},
+    ];
 let testRes = handleLoading(text, testOperations);
 console.log(testRes);

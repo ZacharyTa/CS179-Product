@@ -1,57 +1,32 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { Container, OutputLoadOperation } from "@/lib/types";
+import { Container } from "@/lib/types";
 import { useGridData } from "@/hooks/useGridData";
-import {
-  getCurrentOperationIndex,
-  getCurrentOperation,
-} from "@/utils/operationCookies";
+import { getCurrentOperation } from "@/utils/operationCookies";
 
-interface ShipGridProps {
+interface BufferGridProps {
   containers?: Container[];
   columns: number;
   rows: number;
-  loading: boolean;
-  operations?: OutputLoadOperation[];
-  onSelectContainer?: (container: Container) => void;
   currentOperationIndex: number;
+  loading: boolean;
 }
 
-const ShipGrid: React.FC<ShipGridProps> = ({
+const BufferGrid: React.FC<BufferGridProps> = ({
   containers = [],
   columns,
   rows,
-  loading,
-  operations,
-  onSelectContainer,
   currentOperationIndex,
+  loading,
 }) => {
-  const { gridSlots, selectedGridSlots } = useGridData({
+  const { gridSlots, selectedGridSlots, selectGridSlot } = useGridData({
     containers,
     columns,
     rows,
   });
 
-  const [offloadSlots, setOffloadSlots] = useState<Set<number>>(new Set());
-
-  // Highlighting old col/row and new col/row
   const [oldIndex, setOldIndex] = useState<number | null>(null);
   const [newIndex, setNewIndex] = useState<number | null>(null);
-
-  useEffect(() => {
-    const gridSize = columns * rows;
-    const slots = new Set<number>();
-
-    operations?.forEach((operation) => {
-      if (operation.type === "offload") {
-        const rowIndex = operation.oldRow - 1;
-        const colIndex = operation.oldColumn - 1;
-        const index = gridSize - (rowIndex * columns + colIndex) - 1;
-        slots.add(index);
-      }
-    });
-    setOffloadSlots(slots);
-  }, [operations, columns, rows]);
 
   useEffect(() => {
     const operation = getCurrentOperation();
@@ -59,15 +34,15 @@ const ShipGrid: React.FC<ShipGridProps> = ({
       const { oldRow, oldColumn, newRow, newColumn } = operation;
       const gridSize = columns * rows;
 
-      if (oldColumn > 0) {
-        const oldIndex = (oldRow - 1) * columns + (oldColumn - 1);
+      if (oldColumn < 0) {
+        const oldIndex = (oldRow - 1) * columns + (-oldColumn - 1);
         setOldIndex(gridSize - oldIndex - 1);
       } else {
         setOldIndex(null);
       }
 
-      if (newColumn > 0) {
-        const newIndex = (newRow - 1) * columns + (newColumn - 1);
+      if (newColumn < 0) {
+        const newIndex = (newRow - 1) * columns + (-newColumn - 1);
         setNewIndex(gridSize - newIndex - 1);
       } else {
         setNewIndex(null);
@@ -78,12 +53,6 @@ const ShipGrid: React.FC<ShipGridProps> = ({
     }
   }, [currentOperationIndex]);
 
-  const handleSlotClick = (slot: Container | null, index: number) => {
-    if (loading && slot && slot.item !== "UNUSED" && slot.item !== "NAN") {
-      onSelectContainer && onSelectContainer(slot);
-    }
-  };
-
   return (
     <>
       <div
@@ -92,7 +61,7 @@ const ShipGrid: React.FC<ShipGridProps> = ({
           gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
           gridTemplateRows: `repeat(${rows}, minmax(0, 1fr))`,
         }}
-        dir="rtl"
+        dir="ltr"
       >
         {gridSlots &&
           gridSlots?.map((slot, index) => {
@@ -106,9 +75,9 @@ const ShipGrid: React.FC<ShipGridProps> = ({
             return (
               <div
                 key={index}
-                className={`flex items-center justify-center text-center border aspect-square ${loading ? "text-[12px]" : "text-[6px]"} ${cellClass} ${
+                className={`flex items-center justify-center text-center border aspect-square text-[6px] ${!loading ? cellClass : ""} ${
                   slot
-                    ? offloadSlots.has(index)
+                    ? selectedGridSlots.has(index)
                       ? "bg-success"
                       : slot.item === "UNUSED"
                         ? "bg-secondary/50"
@@ -117,7 +86,7 @@ const ShipGrid: React.FC<ShipGridProps> = ({
                           : "bg-base-300 text-base-content"
                     : "bg-white"
                 } hover:opacity-70`}
-                onClick={() => handleSlotClick(slot, index)}
+                onClick={() => slot?.item !== "NAN" && selectGridSlot(index)}
               >
                 <span className="truncate">{slot ? slot?.item : "Empty"}</span>
               </div>
@@ -128,4 +97,4 @@ const ShipGrid: React.FC<ShipGridProps> = ({
   );
 };
 
-export default ShipGrid;
+export default BufferGrid;

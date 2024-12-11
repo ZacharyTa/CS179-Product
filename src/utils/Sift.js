@@ -1,7 +1,6 @@
-// import {Problem, Node, processData, hashGrid} from './problem.js'
-import { processData, hashGrid} from './problem.js'
+import {Problem, Node, processData, hashGrid} from './problem.js'
 import {priorityQueue} from './priority.js'
-import {findTime, Problem, Node} from './handleBalancing.js' //for now just in case
+import {findTime} from './handleBalancing.js' 
 
 //sorts all cargo in the ship
 //returns a sorted list of containers

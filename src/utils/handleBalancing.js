@@ -42,8 +42,6 @@ class Problem{
 
     }
 
-
-
     bufferEmpty(){
 
         for(var i = 0; i < this.buffer.length; i++){

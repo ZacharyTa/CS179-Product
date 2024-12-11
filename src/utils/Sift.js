@@ -120,10 +120,10 @@ function validateMoves(state, source, row, col) {
                 var t = -1;
 
                 if (source == "buffer")
-                    t = findTime(grid, row, col, targetRow, j); // Find time with obstacles
+                    t = findTime(grid, row, col, targetRow, i); // Find time with obstacles
                 if (source == "grid"){
                     let source_to_pink = findTime(grid, row, col, 8, 0);
-                    let pink_to_target = findTime(buffer, 8, 0, targetRow, j)
+                    let pink_to_target = findTime(buffer, 8, 0, targetRow, i)
                     t = source_to_pink + 4 + pink_to_target;
                 }
 
@@ -136,7 +136,7 @@ function validateMoves(state, source, row, col) {
                     oldRow: row,
                     oldColumn: col,
                     newRow: targetRow,
-                    newColumn: j,
+                    newColumn: i,
                     cost: t,
                     time: t,
                 });

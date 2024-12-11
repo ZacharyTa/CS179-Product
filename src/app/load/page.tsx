@@ -17,6 +17,8 @@ export default function LoadPage() {
   const [manifestText, setManifestText] = useState<string>("");
   const [operations, setOperationsState] = useState<OutputLoadOperation[]>([]);
 
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
   // onmount load manifestText and operations
   useEffect(() => {
     const savedManifestText = getManifestData();
@@ -92,11 +94,16 @@ export default function LoadPage() {
   };
 
   const handleFinish = () => {
-    setSelection("loading");
-    const optimalOperations = handleLoading(getManifestData(), operations);
-    setOperations(optimalOperations);
+    setIsLoading(true);
+    setTimeout(() => {
+      const optimalOperations = handleLoading(getManifestData(), operations);
+      setSelection("balancing");
 
-    router.push("/balance");
+      setOperations(optimalOperations);
+
+      router.push("/balance");
+      setIsLoading(true);
+    }, 500);
   };
 
   const handleRemoveOperation = (operationName: string) => {
@@ -122,37 +129,44 @@ export default function LoadPage() {
         />
       }
     >
-      <div className="h-full outline outline-red-500">
-        <div className="grid grid-flow-col grid-cols-4 grid-rows-5 gap-4 outline outline-red-500">
-          <div className="col-span-2 row-span-3 row-start-2 outline outline-red-500">
-            {manifestData && (
-              <ShipGrid
-                columns={manifestData.columns}
-                rows={manifestData.rows}
-                containers={manifestData.containers}
-                loading={true}
-                operations={operations}
-                onSelectContainer={onSelectContainer}
-              />
-            )}
-          </div>
-          <div className="col-span-3 col-start-1 row-start-5 outline outline-red-500">
-            <div className="flex flex-row items-center gap-2">
-              <div className="flex-1">
-                <Log />
-              </div>
-              <div className="flex-3 flex flex-col gap-2 justify-between">
-                <button className="btn btn-secondary" onClick={handleOnload}>
-                  Add Cargo
-                </button>
-                <button className="btn btn-primary" onClick={handleFinish}>
-                  Finish
-                </button>
+      {!isLoading && (
+        <div className="h-full outline outline-red-500">
+          <div className="grid grid-flow-col grid-cols-4 grid-rows-5 gap-4 outline outline-red-500">
+            <div className="col-span-2 row-span-3 row-start-2 outline outline-red-500">
+              {manifestData && (
+                <ShipGrid
+                  columns={manifestData.columns}
+                  rows={manifestData.rows}
+                  containers={manifestData.containers}
+                  loading={true}
+                  operations={operations}
+                  onSelectContainer={onSelectContainer}
+                />
+              )}
+            </div>
+            <div className="col-span-3 col-start-1 row-start-5 outline outline-red-500">
+              <div className="flex flex-row items-center gap-2">
+                <div className="flex-1">
+                  <Log />
+                </div>
+                <div className="flex-3 flex flex-col gap-2 justify-between">
+                  <button className="btn btn-secondary" onClick={handleOnload}>
+                    Add Cargo
+                  </button>
+                  <button className="btn btn-primary" onClick={handleFinish}>
+                    Finish
+                  </button>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
+      {isLoading && (
+        <div className="h-screen flex items-center justify-center bg-base-100">
+          <span className="loading loading-spinner loading-lg text-primary"></span>
+        </div>
+      )}
     </Layout>
   );
 }

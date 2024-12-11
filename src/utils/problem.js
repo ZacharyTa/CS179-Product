@@ -1,12 +1,10 @@
-
 //class to represent Problem states (tree structure)
 class Problem{
     
     // constructor(ship, buffer){
     constructor(ship, buffer){        
         this.grid = ship;
-        this.buffer = buffer; //might remove this, not sure yet, if so will also delete setBuffer() & bufferEmpty()
-        // this.time = time; this will be stored with Node instead
+        this.buffer = buffer;
     }
 
     // setTime(time) { this.time = time;}
@@ -18,42 +16,111 @@ class Problem{
     }
 
     //function to return a grid with a new move; 
-    getNewGrid(grid, move){
-        var newGrid = grid.map(row =>row.map(cell => ({...cell})));
-        var container = newGrid[move.oldRow][move.oldColumn];
-        newGrid[move.oldRow][move.oldColumn] = {name: "UNUSED", w: 0}; //old spot should now be unused
-        newGrid[move.newRow][move.newColumn]= container;
+    //still need to distinguish RIP
+    // getNewGrid(grid, move){
+    //     var newGrid = grid.map(row =>row.map(cell => ({...cell})));
 
-        return (newGrid);
+    //     if(move.name === "UNUSED0jjjj"){
+    //         console.log("getNewGrid called")
+    //     console.log("m; ", move)
+    
+    //     }
 
+
+    //     var container = newGrid[move.oldRow][move.oldColumn];
+     
+    //     newGrid[move.oldRow][move.oldColumn] = {name: "UNUSED", w: 0}; //old spot should now be unused
+    //     newGrid[move.newRow][move.newColumn]= container;
+
+    //     return (newGrid);
+
+    // }
+
+ getNewGrid(grid, move) {
+        const newGrid = grid.map(row => row.map(cell => ({ ...cell })));
+        // Validate move indices
+        if (
+            move.newRow < 0 || move.newRow >= newGrid.length ||
+            move.newColumn < 0 || move.newColumn >= newGrid[0].length ||
+            move.oldRow < 0 || move.oldRow >= newGrid.length ||
+            move.oldColumn < 0 || move.oldColumn >= newGrid[0].length
+        ) {
+            throw new Error(`Invalid move indices: ${JSON.stringify(move)}`);
+        }
+    
+        // Perform the move
+        const container = newGrid[move.oldRow][move.oldColumn];
+        newGrid[move.oldRow][move.oldColumn] = { name: "UNUSED", w: 0 };
+        newGrid[move.newRow][move.newColumn] = container;
+    
+        return newGrid;
     }
+    
+
+    
 
 
-    setBuffer(nex, newY, name){}
+    bufferEmpty(){
+
+        for(var i = 0; i < this.buffer.length; i++){
+            for(var j = 0; j < this.buffer[i].length; j++){
+                if (this.buffer[i][j].name !== "UNUSED"){
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
 }
 
 
 //Node structure 
 class Node{
 
-    constructor(problem, parent, move, cost){
-        this.problem = problem;         //the grid
+    constructor(problem, parent, move, cost, craneMove, bufferMove){
+    // constructor(problem, parent, move, cost, bufferMove){
+        this.problem = problem;         
         this.parent = parent; 
         this.move = move,
         this.cost = cost;
+        this.craneMove = craneMove; //only if the containers are different
+                                    //else pass [] (gets taken care of in path())
+        this.bufferMove = bufferMove;
+        
     }
 
+    getCraneMove (){ return this.craneMove;}
+    getMove(){return this.move; }
+    getBufferMove(){return this.bufferMove}
 
-    path(){
+
+    path() {
         const path = [];
-        var currNode = this;
-        while (currNode.parent != null){
-            path.unshift(currNode.move) //adding to path
+        let currNode = this;
+    
+        //add container move
+        while (currNode.parent != null) {
+            if (currNode.move != null && !isNaN(currNode.move.newRow) && !isNaN(currNode.move.newColumn)) {
+                path.unshift(currNode.move);
+                //add crane time
+                if (currNode.craneMove != null && !isNaN(currNode.craneMove.newRow) && !isNaN(currNode.craneMove.newColumn)) {
+                    //path.unshift(currNode.craneMove);
+                    currNode.move.time = (currNode.move.time || 0) + currNode.craneMove.time;
+                }
+            }
+
+            //add buffer move
+            if (currNode.bufferMove != null && !isNaN(currNode.bufferMove.newRow) && !isNaN(currNode.bufferMove.newColumn)) {
+                path.unshift(currNode.craneMove);
+            }
+
             currNode = currNode.parent;
         }
-
+    
         return path;
     }
+    
 
 }
 
@@ -70,7 +137,6 @@ function hashGrid(grid) {
     }
     return stringToHash(hash);
 }
-
 
 function stringToHash(str) {
     var hash = 0;
@@ -108,5 +174,5 @@ function processData(manifestText){
 //info[2] = "string"
 
 
-export {Problem, Node, processData, hashGrid}
 
+export {Problem, Node, processData, hashGrid}

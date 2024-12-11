@@ -1,30 +1,25 @@
 "use client";
 import React, { useState } from "react";
-import handleBalancing from "@/utils/handleBalancing";
+import Cookies from "js-cookie";
 
 interface ManifestUploadProps {
-  onManifestUpload: (manifestText: string) => void; // Pass this to parent component
+  onManifestUpload: (manifestText: string, fileName: string) => void; // Pass this to parent component
 }
 
 const ManifestUpload: React.FC<ManifestUploadProps> = ({
   onManifestUpload,
 }) => {
-  const [manifestText, setManifestText] = useState<string>("");
+  const [manifestText, setManifestText] = useState<string>("Manifest.txt");
 
   const handleFileChange = async (
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     if (event.target.files && event.target.files[0]) {
       const file = event.target.files[0];
       const text = await file.text();
       setManifestText(text);
-      onManifestUpload(text);
-
-
-      
-      const balancingOperations = handleBalancing(text);
-      console.log("From handleBalancing: ", balancingOperations);
-
+      onManifestUpload(text, file.name);
+      Cookies.set("manifestFileName", file.name);
     }
   };
   return (
@@ -35,6 +30,7 @@ const ManifestUpload: React.FC<ManifestUploadProps> = ({
         </div>
         <input
           type="file"
+          placeholder={manifestText}
           accept=".txt"
           className="file-input file-input-bordered file-input-primary text-base-content file-input-sm w-full max-w-xs"
           onChange={handleFileChange}

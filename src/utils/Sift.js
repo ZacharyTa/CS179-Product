@@ -68,11 +68,10 @@ function validateMoves(state, source, row, col) {
     
     for (var j = 0; j < grid[0].length; j++) {
         if (source == "grid" && j === col) continue; 
-
+        
         // Find the "lowest" available position 
         let targetRow = findAvailableColumnSlot(grid, j);
         
-
         // If a valid row 
         if (targetRow !== -1) {
             number_of_moves +=1;
@@ -161,29 +160,80 @@ export function obtainGoalState(ship){
             new_grid[i][j] = JSON.parse(JSON.stringify(cell)); //this is convoluted but creates a deep copy. no worries.
           }
           else if (cell["name"]!="UNUSED"){
+            console.log(cell["name"]);
             crates.push(JSON.parse(JSON.stringify(cell)));
           }
 
         }
-      }
-      console.log("CRATES: ", crates);
-   
-      var sorted_crates = sortCrates(crates);
-      console.log("SORTED: ", sorted_crates);
+    }
+    console.log("CRATES: ", crates);
 
-      for (let i = 0; i < new_grid.length; i++) {
-        for (let j = 0; j < new_grid[i].length; j++) {
-            const cell = new_grid[i][j];
-            if (!cell){
-                if (sorted_crates.length ===0){
-                    new_grid[i][j] = {"w": 0, "name": "UNUSED"};
-                }
-                else{
-                    new_grid[i][j] = sorted_crates.shift();
-                }
+   
+    var sorted_crates = sortCrates(crates);
+    console.log("SORTED: ", sorted_crates);
+
+
+      for (let i = 0; i < new_grid.length; i++){
+        //6, 7, 5, 8, 4, 9, 3, 10, 2, 11, 1, 12 until row is flushAllTraces.
+        for (let j = 0; j < new_grid[i].length; j++){
+            if (ship[i][j]["name"] != "NAN"){
+                new_grid[i][j] = {"w": 0, "name": "UNUSED"};
             }
         }
       }
+
+
+
+      var left_col = 5;
+      var right_col = 6;
+      var left_row = 0;
+      var right_row = 0;
+      var len = sorted_crates.length;
+      for (let i = 0; i < len; i++){
+        console.log(sorted_crates[i]);
+        //if i is even, put on left side.
+        //if i is odd, put on right side.
+        if (i %2 == 0){
+            //if new grid is NAN, go up one row and reset.
+            if (new_grid[left_row][left_col]["name"] == "NAN"){
+                left_row +=1;
+                left_col = 5;
+            }
+            new_grid[left_row][left_col] = sorted_crates.shift();
+            left_col -=1;
+            if (left_col ==-1){
+                left_row +=1;
+                left_col = 5;
+            }
+        }
+        else if (i %2 != 0){
+            if (new_grid[right_row][right_col]["name"] == "NAN"){
+                right_row+=1
+                right_col = 6;
+            }
+
+            new_grid[right_row][right_col] = sorted_crates.shift();
+            right_col+=1;
+            if (right_col ==12){
+                right_row+=1
+                right_col = 6;
+            }
+
+        }
+      }
+    //   for (let i = 0; i < new_grid.length; i++) {
+    //     for (let j = 0; j < new_grid[i].length; j++) {
+    //         const cell = new_grid[i][j];
+    //         if (!cell){
+    //             if (sorted_crates.length ===0){
+    //                 new_grid[i][j] = {"w": 0, "name": "UNUSED"};
+    //             }
+    //             else{
+    //                 new_grid[i][j] = sorted_crates.shift();
+    //             }
+    //         }
+    //     }
+    //   }
       console.log("GOAL : ", new_grid);
       return new_grid;
 }
@@ -326,9 +376,9 @@ function heuristic(move, problem, goal){
     
     let h1 = heuristic_local(move, goal);
     let h2 = heuristic_state(move, problem.grid, goal);
-    let h3 = heuristic_buffer(problem, move);
+    //let h3 = heuristic_buffer(problem, move);
     
-    return (h1+h2+h3);
+    return (h1*1.25+h2*2);
 }
 
 

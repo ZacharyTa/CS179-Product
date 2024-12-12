@@ -90,7 +90,7 @@ function findObstacles(ship, row, col, newCol){
             return i;
         }
     }
-    return 9;
+    return 8;
 }
 
 function addBufferMove(parent, moves, ship, row, col, operations) {
@@ -164,7 +164,7 @@ function addMoves(parent, moves, ship, i, j, operations){
                 if(parent.move.type == "buffer") {
                     dist += Math.abs(parent.move.newRow - 4) + Math.abs(parent.move.newColumn - 0) + 4 + Math.abs(8-i) + Math.abs(0 - j);
                 }else{
-                    dist += Math.abs(r - i) + Math.abs(c - j);
+                    dist += Math.abs(r - i) + Math.abs(c - j) + Math.abs(r - parent.move.newRow);
                 }
             }else {
                 dist += Math.abs(8 - i) + Math.abs(0 - j);
@@ -218,7 +218,7 @@ function addMoves(parent, moves, ship, i, j, operations){
                     console.log(r);
                     c = parent.move.newColumn;
                 }
-                dist += Math.abs(r - i) + Math.abs(c - j);
+                dist += Math.abs(r - i) + Math.abs(c - j) + Math.abs(parent.move.newRow - r + 1);
             }else {
                 dist += Math.abs(8 - i) + Math.abs(0 - j);
             }
@@ -269,6 +269,22 @@ function addOperations(parent, moves, ship, ops, operations) {
                 let row = open[k][0];
                 let col = open[k][1];
                 let dist = Math.abs(row - 8) + Math.abs(col - 0) + 4;
+                if(parent.move != null) {
+                    console.log(parent.move)
+                    let r = 0;
+                    let c = 0;
+                    if(parent.move.newRow == -1){
+                        r = 8;
+                        c = 0;
+                        if(parent.move.type == "offload"){
+                            dist -= 2;
+                        }
+                    }else if (parent.move.type == "onload"){
+                        r = parent.move.newRow;
+                        c = parent.move.newCol;
+                        dist += Math.abs(r - 8) + Math.abs(c - 0);
+                    }
+                }
                 let m = {
                     type: "onload",
                     name: operations[i].name,
@@ -487,19 +503,19 @@ export default function handleLoading(manifestText, operations) {
 
 let text = `\
 [01,01], {00000}, NAN
-[01,02], {00000}, NAN
-[01,03], {00000}, NAN
-[01,04], {00120}, Ram
+[01,02], {00060}, Catfish
+[01,03], {00020}, Dogana
+[01,04], {00020}, Batons
 [01,05], {00000}, UNUSED
 [01,06], {00000}, UNUSED
 [01,07], {00000}, UNUSED
 [01,08], {00000}, UNUSED
-[01,09], {00035}, Owl
-[01,10], {00000}, NAN
-[01,11], {00000}, NAN
+[01,09], {00000}, UNUSED
+[01,10], {00000}, UNUSED
+[01,11], {00000}, UNUSED
 [01,12], {00000}, NAN
-[02,01], {00000}, NAN
-[02,02], {00050}, Dog
+[02,01], {00000}, UNUSED
+[02,02], {00020}, Rations for US Army
 [02,03], {00000}, UNUSED
 [02,04], {00000}, UNUSED
 [02,05], {00000}, UNUSED
@@ -509,8 +525,8 @@ let text = `\
 [02,09], {00000}, UNUSED
 [02,10], {00000}, UNUSED
 [02,11], {00000}, UNUSED
-[02,12], {00000}, NAN
-[03,01], {00040}, Cat
+[02,12], {00000}, UNUSED
+[03,01], {00000}, UNUSED
 [03,02], {00000}, UNUSED
 [03,03], {00000}, UNUSED
 [03,04], {00000}, UNUSED
@@ -583,10 +599,11 @@ let text = `\
 [08,11], {00000}, UNUSED
 [08,12], {00000}, UNUSED`;
 let testOperations = [
-    // {type: "onload", name: "Nat"},
-    // {type: "offload", name: "Batons"},
-    // {type: "offload", name: "Apple"},
-    {type:"onload", name: "Bat"},
+    {type: "onload", name: "Nat"},
+    {type: "offload", name: "Catfish"},
+    // {type: "offload", name: "Hen"},
+    {type:"offload", name: "Batons"},
+    // {type: "onload", name: "Rat"},
     // {type: "onload", name: "Dog"},
     ];
 let testRes = handleLoading(text, testOperations);

@@ -1,4 +1,3 @@
-import next from "next";
 import { priorityQueue } from "./priority.js";
 import { Problem, Node, processData, hashGrid } from "./problemLoad.js";
 

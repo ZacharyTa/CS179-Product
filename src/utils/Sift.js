@@ -44,6 +44,8 @@ function findTime(input_grid, r, c, i ,j){
             }
         }
     }
+
+    debugger;
     return 10000; //to deprioritize inside frontier priority and heuristic
 }
 
@@ -265,19 +267,6 @@ export function obtainGoalState(ship){
 
         }
       }
-    //   for (let i = 0; i < new_grid.length; i++) {
-    //     for (let j = 0; j < new_grid[i].length; j++) {
-    //         const cell = new_grid[i][j];
-    //         if (!cell){
-    //             if (sorted_crates.length ===0){
-    //                 new_grid[i][j] = {"w": 0, "name": "UNUSED"};
-    //             }
-    //             else{
-    //                 new_grid[i][j] = sorted_crates.shift();
-    //             }
-    //         }
-    //     }
-    //   }
       console.log("GOAL : ", new_grid);
       return new_grid;
 }
@@ -388,12 +377,44 @@ export function operateSift(ship){
                     var [newGrid, newBuffer] = current.problem.getNewGrids(current.problem.grid, current.problem.buffer, move);
                     var newProblem = new Problem(newGrid, newBuffer);
 
-                    //i removed crane implementation but will re-add TODO
-                    var craneMove = null;
+                    //oldMove refers to the dequeued current node's last move that got them to this position.
+                    //in contrast, move variable is the new move that is used to create this new, updated grid.
+                    var oldMove = current.getMove();
+                    let craneTime = 0;
+                    
+                    if (!oldMove){
+                         craneTime = Math.abs(8 - move.oldRow) + Math.abs(0 - move.oldColumn);
+                        
+                    }
+                    else{
+                        if (oldMove.newGrid == move.oldGrid){
+                          
+                            var temp = JSON.parse(JSON.stringify(current.problem.grid[move.oldRow][move.oldColumn]));
+                            current.problem.grid[move.oldRow][move.oldColumn] = {"name":"UNUSED", "w":0};
+                            craneTime = findTime(current.problem.grid, oldMove.newRow, oldMove.newColumn, move.oldRow, move.oldColumn);
+
+
+                            if (craneTime == 10000){
+                                console.log(current.problem.grid, oldMove.newRow, oldMove.newColumn, move.oldRow, move.oldColumn);
+                                //debugger;
+                            }
+
+                            current.problem.grid[move.oldRow][move.oldColumn] = temp;
+
+
+                        }
+                        
+                    }
+                    move.time += craneTime; //add time
+                    
+                    //else if oldmove.newGrid is buffer and move.oldgrid is grid, get findtime of buffer to 4, 0
+                    //else if oldmove.newgrid is grid andmove.oldgrid is buffer
+                    
+                    
 
                 
-                    var newCost = current.cost + move.cost; //+ cranetime;
-                    var child = new Node(newProblem, current, move, newCost, craneMove);
+                    var newCost = current.cost + move.cost //+ cranetime;
+                    var child = new Node(newProblem, current, move, newCost, null);
 
                     const h = heuristic(move, newProblem, target);
                     var priority = newCost+h;

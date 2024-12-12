@@ -289,99 +289,68 @@ function validateBuffers(currNode, container, gridLowest, bufferLowest){
 //buffer2: within buffer
 //buffer3: going to grid from the buffer
 
-// function heuristic(child) { //node
+function heuristic(child) { //node
 
-//     var moves = getMoves(child); 
-//     var minCost = Number.MAX_SAFE_INTEGER;
-//     var problem = child.problem;
+    var moves = getMoves(child); 
+    var minCost = Number.MAX_SAFE_INTEGER;
+    var problem = child.problem;
 
-//     var newBuffer = null;
-//     var newGrid = null;
+    var newBuffer = null;
+    var newGrid = null;
 
-//     for (var move of moves) { //if enabled, then some moves are buffers!
-//         for (var m of move.moves) {
+    for (var move of moves) { //if enabled, then some moves are buffers!
+        for (var m of move.moves) {
 
-//             if (enable === true) {
+            if (enable === true) {
 
-//                 var penalty = 0;
-//                 if (m.type === "buffer2") { //moving within buffer
-//                     // newBuffer = bridgeMoves(problem.buffer, problem.buffer, m);
-//                     newGrid = problem.grid;
+                var penalty = 0;
+                if (m.type === "buffer2") { //moving within buffer
+                    // newBuffer = bridgeMoves(problem.buffer, problem.buffer, m);
+                    newGrid = problem.grid;
 
-//                     //deprioritize based on how far away from pink celll
-//                     penalty = (m.newColumn + 1)* 45; //case of at 0,0 
+                    //deprioritize based on how far away from pink celll
+                    penalty = (m.newColumn + 1)* 45; //case of at 0,0 
 
-//                 }
-//                 if (m.type === "buffer3") { //moving back to grid
-//                     var grids = bridgeMoves(problem.buffer, problem.grid, m);
-//                     newGrid = grids.grid2;
-//                     newBuffer = grids.grid1;
-
-//                     //compute weight diff!
-//                 }
-//                 if (m.type === "buffer1") { //moving to buffer
-//                     var grids = bridgeMoves(problem.grid, problem.buffer, m);
-//                     newGrid = grids.grid1;
-//                     newBuffer = grids.grid2;
-//                     penalty = (m.newColumn + 1)* 45;
-//                 }
-//                 if (m.type === "move") { //
-//                     newGrid = problem.getNewGrid(problem.grid, m);
-//                     newBuffer = problem.buffer;
-//                 }
-
-//                 var newWeights = calc_weights(newGrid);
-//                 penalty = Math.abs(newWeights.left_weight - newWeights.right_weight);
-
-//                 var mCost = m.time + m.cost + penalty;
-//                 minCost = Math.min(minCost, mCost);
-
-//             } else { // Grid move only
-//                 newGrid = problem.getNewGrid(problem.grid, m);
-//                 var newWeights = calc_weights(newGrid);
-//                 var newWeightDiff = Math.abs(newWeights.left_weight - newWeights.right_weight);
-//                 var mCost = 2 * m.time + m.cost + newWeightDiff * 0.0001;
-//                 minCost = Math.min(minCost, mCost); 
-//             }
-//         }
-//     }
-
-//     return minCost;
-// }
-
-
-function heuristic(currNode) {
-    const grid = currNode.problem.grid;
-    const buffer = currNode.problem.buffer;
-
-
-    var newWeights = calc_weights(grid);
-    var imbalancePenalty = Math.abs(newWeights.left_weight - newWeights.right_weight);
-
-    // Estimate the minimum time to move containers from the buffer to the grid
-    let bufferPenalty = 0;
-
-    buffer.forEach(container => {
-        let minDistance = Infinity;
-
-        // Find the nearest empty slot on the grid
-        for (let i = 0; i < grid.length; i++) {
-            for (let j = 0; j < grid[i].length; j++) {
-                if (grid[i][j] === null) { // Assuming null represents an empty slot
-                    const distance = Math.abs(container.x - i) + Math.abs(container.y - j);
-                    minDistance = Math.min(minDistance, distance);
                 }
+                if (m.type === "buffer3") { //moving back to grid
+                    var grids = bridgeMoves(problem.buffer, problem.grid, m);
+                    newGrid = grids.grid2;
+                    newBuffer = grids.grid1;
+
+                    //compute weight diff!
+                }
+                if (m.type === "buffer1") { //moving to buffer
+                    var grids = bridgeMoves(problem.grid, problem.buffer, m);
+                    newGrid = grids.grid1;
+                    newBuffer = grids.grid2;
+                    penalty = (m.newColumn + 1)* 45;
+                }
+                if (m.type === "move") { //
+                    newGrid = problem.getNewGrid(problem.grid, m);
+                    newBuffer = problem.buffer;
+                }
+
+                var newWeights = calc_weights(newGrid);
+                penalty = Math.abs(newWeights.left_weight - newWeights.right_weight);
+
+                var mCost = m.time + m.cost + penalty;
+                minCost = Math.min(minCost, mCost);
+
+            } else { // Grid move only
+                newGrid = problem.getNewGrid(problem.grid, m);
+                var newWeights = calc_weights(newGrid);
+                var newWeightDiff = Math.abs(newWeights.left_weight - newWeights.right_weight);
+                var mCost = 2 * m.time + m.cost + newWeightDiff * 0.0001;
+                minCost = Math.min(minCost, mCost); 
             }
         }
+    }
 
-        // Add the closest distance for this container
-        bufferPenalty += minDistance;
-    });
-
-    // Combine penalties with appropriate weights (adjust weights based on problem specifics)
-    const heuristicValue = imbalancePenalty * 10 + bufferPenalty * 2;
-    return heuristicValue;
+    return minCost;
 }
+
+
+
 
 
 

@@ -101,7 +101,7 @@ function validateMoves(state, source, row, col) {
     var number_of_moves = 0;
     var grid = state.grid;
     var buffer = state.buffer;
-
+    var buffer_type = "buffer";
     state[source][row][col]
     
     //console.log("state: ", state);
@@ -124,6 +124,7 @@ function validateMoves(state, source, row, col) {
                 let source_to_pink = findTime(buffer, row, col, 4, 0);
                 let pink_to_target = findTime(grid, 8, 0, targetRow, j)
                 t = source_to_pink + 4 + pink_to_target;
+                buffer_type = "buffer";
             }
 
             moves.push({
@@ -157,14 +158,17 @@ function validateMoves(state, source, row, col) {
 
                 if (source == "buffer")
                     t = findTime(buffer, row, col, targetRow, i); // Find time with obstacles
+                    buffer_type = "buffer2";
+                    
                 if (source == "grid"){
                     let source_to_pink = findTime(grid, row, col, 8, 0);
                     let pink_to_target = findTime(buffer, 4, 0, targetRow, i)
                     t = source_to_pink + 4 + pink_to_target;
+                    buffer_type = "buffer1";
                 }
 
                 moves.push({
-                    type: "move",
+                    type: "buffer",
                     newGrid: "buffer",
                     oldGrid: source,
                     name: state[source][row][col].name,
@@ -327,6 +331,8 @@ export function operateSift(ship){
 
             solutionPath = current.path();
 
+            
+
             var lastElement = {"newRow":9, "newColumn":1};
             if (solutionPath.length >0){ //if not empty
                 lastElement = solutionPath[solutionPath.length - 1];
@@ -338,7 +344,7 @@ export function operateSift(ship){
 
             //Adds this at the very end as a reminder to put the crane back in the right place.
             solutionPath.push({
-                type:"move",
+                type:"Move crane to original position",
                 name: "crane",
                 oldRow: lastElement.newRow,
                 oldColumn: lastElement.newColumn,
@@ -401,9 +407,9 @@ export function operateSift(ship){
     return solutionPath.map((move)=>({
         ...move,
         oldRow: move.oldRow + 1,
-        oldColumn: move.oldColumn+1,
+        oldColumn: move.oldGrid === "buffer" ? -(move.oldColumn + 1) : move.oldColumn + 1,
         newRow: move.newRow+1,
-        newColumn: move.newColumn+1
+        newColumn: move.newGrid === "buffer" ? -(move.newColumn + 1) : move.newColumn + 1,
 
     }));
 

@@ -9,7 +9,7 @@ export function sortCrates(crates){
 }
 
 
-function findTime(input_grid, r, c, i ,j){
+export function findTime(input_grid, r, c, i ,j){
     let grid = input_grid.map(row => [...row]);
     let top_row = [];
     for (let i =0; i < input_grid[0].length; i++){
@@ -44,7 +44,7 @@ function findTime(input_grid, r, c, i ,j){
             }
         }
     }
-
+    
     debugger;
     return 10000; //to deprioritize inside frontier priority and heuristic
 }
@@ -403,12 +403,44 @@ export function operateSift(ship){
 
 
                         }
+                        //else if oldmove.newGrid is buffer and move.oldgrid is grid, get findtime of buffer to 4, 0
+                    //else if oldmove.newgrid is grid andmove.oldgrid is buffer
+
+                        else if (oldMove.newGrid == "buffer" && move.oldGrid == "grid"){
+                            var temp = JSON.parse(JSON.stringify(current.problem.grid[move.oldRow][move.oldColumn]));
+                            current.problem.grid[move.oldRow][move.oldColumn] = {"name":"UNUSED", "w":0};
+
+                            // console.log("BUFFER TO GRID");
+                            let buffer_to_pink = findTime(current.problem.buffer, oldMove.newRow, oldMove.newColumn, 4, 0);
+                            // console.log("p1 pass", buffer_to_pink);
+                            console.log(current.problem.grid, 8, 0, move.oldRow, move.oldColumn);
+                            let pink_to_grid = findTime(current.problem.grid, 8, 0, move.oldRow, move.oldColumn);
+
+                            current.problem.grid[move.oldRow][move.oldColumn] = temp;
+
+                            craneTime = buffer_to_pink + pink_to_grid + 4;
+                        }
+                        else if (oldMove.newGrid== "grid" && move.oldGrid == "buffer"){
+                            var temp = JSON.parse(JSON.stringify(current.problem.buffer[move.oldRow][move.oldColumn]));
+                            current.problem.buffer[move.oldRow][move.oldColumn] = {"name":"UNUSED", "w":0};
+
+                            // console.log("GRID TO BUFFER");
+
+                            let grid_to_pink = findTime(current.problem.grid, oldMove.newRow, oldMove.newColumn, 8, 0);
+                            // console.log("p1 pass");
+                            let pink_to_buffer = findTime(current.problem.buffer, move.oldRow, move.oldColumn, 4, 0);
+                            
+
+                            current.problem.buffer[move.oldRow][move.oldColumn] = temp;
+                            craneTime = grid_to_pink + pink_to_buffer + 4;
+
+
+                        }
                         
                     }
                     move.time += craneTime; //add time
                     
-                    //else if oldmove.newGrid is buffer and move.oldgrid is grid, get findtime of buffer to 4, 0
-                    //else if oldmove.newgrid is grid andmove.oldgrid is buffer
+                    
                     
                     
 

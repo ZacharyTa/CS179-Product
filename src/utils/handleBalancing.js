@@ -2,7 +2,7 @@
 // import { Problem, Node, processData, hashGrid} from './problem.js'
 import {Problem, Node, processData, hashGrid} from './problem.js'
 import {priorityQueue} from './priority.js'
-import {operateSift} from './Sift.js'
+import {operateSift, findTime} from './Sift.js'
 
 /**
  * costs:
@@ -46,7 +46,8 @@ function checkBalance(weights) {
  
 }
 
-function findTime(grid, r, c, i, j) {
+function findTime_old(grid, r, c, i, j) {
+
     const directions = [
         { row: 1, col: 0 },
         { row: -1, col: 0 },
@@ -525,7 +526,18 @@ export default function handleBalancing(manifestText) {
 
             //time to move back to home
             var end = Math.abs(8 - lastElement.newRow) + Math.abs(0 - lastElement.newColumn);
-            lastElement.time += end;
+           //lastElement.time += end;
+
+            solutionPath.push({
+                type:"Move crane to original position",
+                name: "crane",
+                oldRow: lastElement.newRow,
+                oldColumn: lastElement.newColumn,
+                newRow: 8,
+                newColumn: 0,
+                time: end,
+                cost: 0, //removing 
+            })
 
             console.log("solution: ", solutionPath)
             break;  
@@ -634,7 +646,11 @@ export default function handleBalancing(manifestText) {
                         //only compute crane if mm.name != cm Move name! (container changes)
                         if (mm && i &&  (!cm || cm.name !== mm.name && (mm.newRow !== i.oldRow || mm.newColumn !== i.oldColumn))) {
                             if (mm.type === "move"){
-                                craneTime =  findTime(newGrid, mm.newRow, mm.newColumn, i.oldRow, i.oldColumn);
+                                var temp = JSON.parse(JSON.stringify(currNode.problem.grid[i.oldRow][i.oldColumn]));
+                                currNode.problem.grid[i.oldRow][i.oldColumn] = {"name":"UNUSED", "w":0};
+                                craneTime =  findTime(currNode.problem.grid, mm.newRow, mm.newColumn, i.oldRow, i.oldColumn);
+
+                                currNode.problem.grid[i.oldRow][i.oldColumn] = temp;
                             }
                             craneMove = {
                                 type: "move",

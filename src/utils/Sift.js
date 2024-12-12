@@ -1,6 +1,6 @@
 import {Problem, Node, processData, hashGrid} from './problem.js'
 import {priorityQueue} from './priority.js'
-import {findTime} from './handleBalancing.js' 
+import {findTime} from './handleBalancing.js'
 
 //sorts all cargo in the ship
 //returns a sorted list of containers
@@ -385,4 +385,3 @@ function heuristic_buffer(problem, move){
     }
     return cost;
 }
-

@@ -268,7 +268,7 @@ function addOperations(parent, moves, ship, ops, operations) {
             for(let k = 0; k < open.length; k++) {
                 let row = open[k][0];
                 let col = open[k][1];
-                let dist = Math.abs(row - 9) + Math.abs(col - 0) + 4;
+                let dist = Math.abs(row - 8) + Math.abs(col - 0) + 4;
                 let m = {
                     type: "onload",
                     name: operations[i].name,
@@ -487,19 +487,19 @@ export default function handleLoading(manifestText, operations) {
 
 let text = `\
 [01,01], {00000}, NAN
-[01,02], {00099}, Cat
-[01,03], {00100}, Dog
-[01,04], {00000}, UNUSED
+[01,02], {00000}, NAN
+[01,03], {00000}, NAN
+[01,04], {00120}, Ram
 [01,05], {00000}, UNUSED
 [01,06], {00000}, UNUSED
 [01,07], {00000}, UNUSED
 [01,08], {00000}, UNUSED
-[01,09], {00000}, UNUSED
-[01,10], {00000}, UNUSED
-[01,11], {00000}, UNUSED
+[01,09], {00035}, Owl
+[01,10], {00000}, NAN
+[01,11], {00000}, NAN
 [01,12], {00000}, NAN
-[02,01], {00000}, UNUSED
-[02,02], {00000}, UNUSED
+[02,01], {00000}, NAN
+[02,02], {00050}, Dog
 [02,03], {00000}, UNUSED
 [02,04], {00000}, UNUSED
 [02,05], {00000}, UNUSED
@@ -509,8 +509,8 @@ let text = `\
 [02,09], {00000}, UNUSED
 [02,10], {00000}, UNUSED
 [02,11], {00000}, UNUSED
-[02,12], {00000}, UNUSED
-[03,01], {00000}, UNUSED
+[02,12], {00000}, NAN
+[03,01], {00040}, Cat
 [03,02], {00000}, UNUSED
 [03,03], {00000}, UNUSED
 [03,04], {00000}, UNUSED
@@ -586,7 +586,7 @@ let testOperations = [
     // {type: "onload", name: "Nat"},
     // {type: "offload", name: "Batons"},
     // {type: "offload", name: "Apple"},
-    {type:"offload", name: "Cat"},
+    {type:"onload", name: "Bat"},
     // {type: "onload", name: "Dog"},
     ];
 let testRes = handleLoading(text, testOperations);

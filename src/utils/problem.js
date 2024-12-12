@@ -155,5 +155,4 @@ function processData(manifestText){
 //info[2] = "string"
 
 
-
 export {Problem, Node, processData, hashGrid}

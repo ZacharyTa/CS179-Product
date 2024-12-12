@@ -1,6 +1,6 @@
 // logic for handling the A* search algo smth
 // import { Problem, Node, processData, hashGrid} from './problem.js'
-import { processData, hashGrid} from './problem.js'
+import {Problem, Node, processData, hashGrid} from './problem.js'
 import {priorityQueue} from './priority.js'
 import {operateSift} from './Sift.js'
 
@@ -10,111 +10,6 @@ import {operateSift} from './Sift.js'
  * transfer betw them: 4
  * bufferzone: reflect over x axis, EX: most right bottom corner" (1,-1)
  */
-
-/**
- * Temporary -- checking
- */
-//class to represent Problem states (tree structure)
-class Problem{
-    
-    // constructor(ship, buffer){
-    constructor(ship, buffer){        
-        this.grid = ship;
-        this.buffer = buffer;
-   
-    }
-
-    // setTime(time) { this.time = time;}
-    getGrid(){return this.grid;}
-    getTime(){return this.time;}
-
-    //function to return a grid with a new move; 
-    //still need to distinguish RIP
-    getNewGrid(grid, move){
-        var newGrid = grid.map(row =>row.map(cell => ({...cell})));
-        var container = newGrid[move.oldRow][move.oldColumn];
-     
-        newGrid[move.oldRow][move.oldColumn] = {name: "UNUSED", w: 0}; //old spot should now be unused
-        newGrid[move.newRow][move.newColumn]= container;
-
-        return (newGrid);
-
-    }
-
-    bufferEmpty(){
-
-        for(var i = 0; i < this.buffer.length; i++){
-            for(var j = 0; j < this.buffer[i].length; j++){
-                if (this.buffer[i][j].name !== "UNUSED"){
-                    return false;
-                }
-            }
-        }
-
-        return true;
-    }
-
-    
-}
-
-
-//Node structure 
-class Node{
-
-    constructor(problem, parent, move, cost, craneMove, bufferMove){
-    // constructor(problem, parent, move, cost, bufferMove){
-        this.problem = problem;         
-        this.parent = parent; 
-        this.move = move,
-        this.cost = cost;
-        this.craneMove = craneMove; //only if the containers are different
-                                    //else pass [] (gets taken care of in path())
-        this.bufferMove = bufferMove;
-        
-    }
-
-    getCraneMove (){ return this.craneMove;}
-    getMove(){return this.move; }
-    getBufferMove(){return this.bufferMove}
-
-
-    path() {
-        const path = [];
-        let currNode = this;
-    
-        //add container move
-        while (currNode.parent != null) {
-            if (currNode.move != null && !isNaN(currNode.move.newRow) && !isNaN(currNode.move.newColumn)) {
-                path.unshift(currNode.move);
-                //add crane time
-                if (currNode.craneMove != null && !isNaN(currNode.craneMove.newRow) && !isNaN(currNode.craneMove.newColumn)) {
-                    //path.unshift(currNode.craneMove);
-                    currNode.move.time = (currNode.move.time || 0) + currNode.craneMove.time;
-                }
-            }
-
-            //add buffer move
-            if (currNode.bufferMove != null && !isNaN(currNode.bufferMove.newRow) && !isNaN(currNode.bufferMove.newColumn)) {
-                path.unshift(currNode.craneMove);
-            }
-
-            currNode = currNode.parent;
-        }
-    
-        return path;
-    }
-    
-
-}
-
-
-//info[0] = [ x1 x2, 
-//info[1] = y1 y2 ]
-//info[1] = {xxxx}
-//info[2] = "string"
-
-
-
 
 
 //global var
@@ -228,7 +123,11 @@ function validateMoves(currNode, container, lowestUnused, bufferLowest) {  //thi
     //if enable = true
     if(enable === true){
         var outGridTime = Math.abs(row - 8) + Math.abs(col - 0) + 4;
-        for (var j = 0; j < grid[0].length; j++) {
+
+        var startCol = Math.max(0, col - 1);  // Prevent negative column index
+        var endCol = Math.min(grid[0].length - 1, col + 1);  // Prevent out-of-bound columns
+
+        for (var j = startCol; j < endCol; j++) {
 
             if (j === col) continue; 
 
@@ -249,13 +148,19 @@ function validateMoves(currNode, container, lowestUnused, bufferLowest) {  //thi
                 });
             }
             //testing break ---> dont need to add to all buffer bottoms floors maybe
+   
     
         }
 
     } //if enabled, should be 11 + 24 moves
 
+    
+
     return moves;
 }
+
+
+
 
 
 
@@ -358,8 +263,7 @@ function validateBuffers(currNode, container, gridLowest, bufferLowest){
             });
             
         }
-       //testing
-       break;
+
     
     }
 
@@ -542,6 +446,39 @@ function bridgeMoves(grid1, grid2, m) {
 
 
 
+function updateSol(solutionPath) {
+
+    solutionPath.forEach((move) =>{
+        move.oldRow += 1, 
+        move.oldColumn += 1,
+        move.newRow += 1,
+        move.newColumn += 1;
+
+        if (move.type === "buffer1"){
+            move.newColumn  = -move.newColumn;
+            move.type = "buffer"
+        }
+
+        if (move.type === "buffer2"){
+            move.newColumn  = -move.newColumn;
+            move.oldColumn  = -move.oldColumn
+            move.type = "buffer"
+        }
+
+        if (move.type === "buffer3"){
+            move.oldColumn  = -move.newColumn
+            move.type = "buffer"
+        }
+
+
+    });
+
+    return solutionPath;
+   
+}
+
+
+
 //f(n) = g(n) + h(n);
 //g(n) -> current time
 //h(n) -> estimated cost of time to reach goal 
@@ -578,8 +515,8 @@ export default function handleBalancing(manifestText) {
     while(!frontier.isEmpty()){
         var currNode = frontier.dequeue(); 
         var weights = calc_weights(currNode.problem.grid);
-        console.log("current weights: ", weights)
-        console.log("node expanded: ", currNode)
+        // console.log("current weights: ", weights)
+        // console.log ("moves: ", currNode.move, currNode.craneMove, currNode.bufferMove)
 
         if (checkBalance(weights) && currNode.problem.bufferEmpty() ) {  //goal reached
             console.log("checking for stopping condition");
@@ -613,6 +550,12 @@ export default function handleBalancing(manifestText) {
             for(var m of moves){
                 for( var i of m.moves){
 
+                    var craneTime = 0;
+                    var bufferTime = 0;
+                    var craneMove = null;
+                    var bufferMove = null; //will pass null only if enable != true
+                    var gridMove = i;
+
                     var newGrid = null;
                     var newBuffer = null;
                     if (enable === true){
@@ -626,6 +569,7 @@ export default function handleBalancing(manifestText) {
                                 var grids = bridgeMoves(currNode.problem.buffer,currNode.problem.buffer, i)
                                 newGrid = currNode.problem.grid;
                                 newBuffer = grids.grid2
+
                             }
                              //if going from buffer to grid
                             else if(i.type === "buffer3"){
@@ -648,6 +592,18 @@ export default function handleBalancing(manifestText) {
                                 console.log("Unexpected i type:", i.type);
                                 console.log("move i: ", i)
                             }
+
+                            if( i.type !== "move"){
+                                bufferMove = i;
+                                gridMove = parent.i; //store previous parent's grid move
+                                bufferTime = i.cost;
+
+                            }
+                            else{
+                                //since buffer not, then store prev parent's buffer
+                                bufferMove = parent.bufferMove;
+                            }
+                    
                     }
                     else{
                         newGrid = currNode.problem.getNewGrid(currNode.problem.grid, i);
@@ -657,9 +613,7 @@ export default function handleBalancing(manifestText) {
                     var newP = new Problem(newGrid, newBuffer);
 
                     //determine if crane is starting or not
-                    var craneTime = 0;
-                    var craneMove = null;
-                    var bufferMove = null; //will pass null only if enable != true
+                    
 
                     if (currNode.cost === 0){ //when crane should start at initial position 
                         //add this time to each beginning moves
@@ -678,7 +632,7 @@ export default function handleBalancing(manifestText) {
                         var mm = currNode.getMove();
                         var cm = currNode.getCraneMove();
                         //only compute crane if mm.name != cm Move name! (container changes)
-                        if (  !cm || cm.name !== mm.name && (mm.newRow !== i.oldRow || mm.newColumn !== i.oldColumn)) {
+                        if (mm && i &&  (!cm || cm.name !== mm.name && (mm.newRow !== i.oldRow || mm.newColumn !== i.oldColumn))) {
                             if (mm.type === "move"){
                                 craneTime =  findTime(newGrid, mm.newRow, mm.newColumn, i.oldRow, i.oldColumn);
                             }
@@ -695,8 +649,8 @@ export default function handleBalancing(manifestText) {
                     }
 
                     //deprioritizing craneTime, since initialCrane time has too much influence on the problem path
-                    var newCost = currNode.cost + 0.5*i.cost; +  0.001*craneTime; 
-                    var child = new Node(newP, currNode, i, newCost, craneMove, bufferMove);
+                    var newCost = currNode.cost + i.cost; +  0.001*craneTime + bufferTime; 
+                    var child = new Node(newP, currNode, gridMove, newCost, craneMove, bufferMove);
                     var h = heuristic(child);
 
                     var frontierPriority = h + newCost;
@@ -706,11 +660,18 @@ export default function handleBalancing(manifestText) {
         }
     }
 
+ 
+
     if(solutionPath === null){
         console.error("No solution found. Will use SIFT");
         return [] ;
     }
     else{
+
+        if (enable === true){
+            var sol = updateSol(solutionPath);
+            return sol;
+        }
 
         return solutionPath.map(({ cost, ...move }) => ({
             ...move,

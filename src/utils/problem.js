@@ -5,25 +5,41 @@ class Problem{
     constructor(ship, buffer){        
         this.grid = ship;
         this.buffer = buffer;
-   
     }
 
     // setTime(time) { this.time = time;}
     getGrid(){return this.grid;}
     getTime(){return this.time;}
 
-    //function to return a grid with a new move; 
-    //still need to distinguish RIP
-    getNewGrid(grid, move){
-        var newGrid = grid.map(row =>row.map(cell => ({...cell})));
-        var container = newGrid[move.oldRow][move.oldColumn];
-     
-        newGrid[move.oldRow][move.oldColumn] = {name: "UNUSED", w: 0}; //old spot should now be unused
-        newGrid[move.newRow][move.newColumn]= container;
-
-        return (newGrid);
-
+    bufferEmpty(){
+        return this.buffer.every(row => row.every(cell => cell === "UNUSED"))
     }
+
+
+
+ getNewGrid(grid, move) {
+        const newGrid = grid.map(row => row.map(cell => ({ ...cell })));
+        // Validate move indices
+        if (
+            move.newRow < 0 || move.newRow >= newGrid.length ||
+            move.newColumn < 0 || move.newColumn >= newGrid[0].length ||
+            move.oldRow < 0 || move.oldRow >= newGrid.length ||
+            move.oldColumn < 0 || move.oldColumn >= newGrid[0].length
+        ) {
+            throw new Error(`Invalid move indices: ${JSON.stringify(move)}`);
+        }
+    
+        // Perform the move
+        const container = newGrid[move.oldRow][move.oldColumn];
+        newGrid[move.oldRow][move.oldColumn] = { name: "UNUSED", w: 0 };
+        newGrid[move.newRow][move.newColumn] = container;
+    
+        return newGrid;
+    }
+    
+
+    
+
 
     bufferEmpty(){
 
@@ -37,8 +53,6 @@ class Problem{
 
         return true;
     }
-
-    
 }
 
 
@@ -90,6 +104,7 @@ class Node{
     
 
 }
+
 
 
 //need to make hasing for 2d object 

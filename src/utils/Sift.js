@@ -1,12 +1,52 @@
-import {Problem, Node, processData, hashGrid} from './problem.js'
+import {Problem, Node, processData, hashGrid} from './problemSift.js'
 import {priorityQueue} from './priority.js'
-import {findTime} from './handleBalancing.js'
+//import {findTime} from './handleBalancing.js'
 
 //sorts all cargo in the ship
 //returns a sorted list of containers
 export function sortCrates(crates){
     return crates.sort((a, b) => b.w - a.w);
 }
+
+
+function findTime(input_grid, r, c, i ,j){
+    let grid = input_grid.map(row => [...row]);
+    let top_row = [];
+    for (let i =0; i < input_grid[0].length; i++){
+        top_row.push({"w":0, "name":"UNUSED"});
+    }
+    grid.push(top_row);
+    
+    //directions
+    var dir = [ {row: 1, col: 0 },
+                {row: -1, col: 0},
+                {row: 0, col: -1},
+                {row: 0, col: 1 }]
+
+    var q = [{row: r, col: c, time: 0}];
+    var seen = new Set();
+    seen.add(`${r}-${c}`);
+
+    while (q.length > 0){
+        var {row, col, time} = q.shift();
+        if(row === i && col ===j){return time;}
+        
+        for( var{row: dr, col: dc} of dir){
+            var newR = row + dr;
+            var newC = col + dc;
+            // if with grid bounds
+            if(newR >=0 && newR < grid.length && newC >= 0 && newC < grid[0].length){
+                //if not visited and available to be moved to (so no nan or other containers)
+                if (!seen.has(`${newR}-${newC}`) && grid[newR][newC].name === "UNUSED"){
+                    seen.add(`${newR}-${newC}`);
+                    q.push({row: newR, col: newC, time:time + 1});
+                }
+            }
+        }
+    }
+    return 10000; //to deprioritize inside frontier priority and heuristic
+}
+
 
 function getMoves(state){
     var grid = state.grid;

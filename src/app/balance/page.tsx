@@ -86,9 +86,9 @@ export default function BalancePage() {
       >
         <TransformWrapper limitToBounds={false} minScale={0.5} maxScale={2}>
           <TransformComponent>
-            <div className="h-full/2 outline outline-red-500">
-              <div className="grid grid-cols-7 grid-rows-8 gap-4 outline outline-red-500">
-                <div className="col-span-2 row-span-3 col-start-6 row-start-6 outline outline-red-500">
+            <div className="h-full/2 ">
+              <div className="grid grid-cols-7 grid-rows-8 gap-4">
+                <div className="col-span-2 row-span-3 col-start-6 row-start-6">
                   {manifestData && (
                     <ShipGrid
                       columns={manifestData.columns}
@@ -99,7 +99,7 @@ export default function BalancePage() {
                     />
                   )}
                 </div>
-                <div className="col-span-4 row-span-2 col-start-1 row-start-6 outline outline-red-500">
+                <div className="col-span-4 row-span-2 col-start-1 row-start-6">
                   {bufferData && (
                     <BufferGrid
                       columns={bufferData.columns}
@@ -110,7 +110,7 @@ export default function BalancePage() {
                     />
                   )}
                 </div>
-                <div className="col-span-1 row-span-1 col-start-5 row-start-7 outline outline-red-500">
+                <div className="col-span-1 row-span-1 col-start-5 row-start-7">
                   <div className="flex justify-center">
                     <Image
                       src="/assets/truck.png"

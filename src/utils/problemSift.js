@@ -4,8 +4,10 @@ class Problem{
     // constructor(ship, buffer){
     constructor(ship, buffer){        
         this.grid = ship;
-        this.buffer = buffer;
+        this.buffer = buffer; //might remove this, not sure yet, if so will also delete setBuffer() & bufferEmpty()
+        // this.time = time; this will be stored with Node instead
     }
+
 
     // setTime(time) { this.time = time;}
     getGrid(){return this.grid;}
@@ -15,65 +17,67 @@ class Problem{
         return this.buffer.every(row => row.every(cell => cell === "UNUSED"))
     }
 
+    //function to return a grid with a new move; 
+    getNewGrid(grid, move){
+        var newGrid = grid.map(row =>row.map(cell => ({...cell})));
+        var container = newGrid[move.oldRow][move.oldColumn];
+        newGrid[move.oldRow][move.oldColumn] = {name: "UNUSED", w: 0}; //old spot should now be unused
+        newGrid[move.newRow][move.newColumn]= container;
 
+        return (newGrid);
 
- getNewGrid(grid, move) {
-        const newGrid = grid.map(row => row.map(cell => ({ ...cell })));
-        // Validate move indices
-        if (
-            move.newRow < 0 || move.newRow >= newGrid.length ||
-            move.newColumn < 0 || move.newColumn >= newGrid[0].length ||
-            move.oldRow < 0 || move.oldRow >= newGrid.length ||
-            move.oldColumn < 0 || move.oldColumn >= newGrid[0].length
-        ) {
-            throw new Error(`Invalid move indices: ${JSON.stringify(move)}`);
-        }
-    
-        // Perform the move
-        const container = newGrid[move.oldRow][move.oldColumn];
-        newGrid[move.oldRow][move.oldColumn] = { name: "UNUSED", w: 0 };
-        newGrid[move.newRow][move.newColumn] = container;
-    
-        return newGrid;
     }
-    
 
-    
+    getNewGrids(grid, buffer, move){
+        //shallow copying
+        //var newGrid = grid.map(row =>row.map(cell => ({...cell})));
+        //var newBuffer = buffer.map(row =>row.map(cell => ({...cell})));
 
+        //deep copying
+        var newGrid = JSON.parse(JSON.stringify(grid));
+        var newBuffer = JSON.parse(JSON.stringify(buffer));
+        var container;
 
-    bufferEmpty(){
-
-        for(var i = 0; i < this.buffer.length; i++){
-            for(var j = 0; j < this.buffer[i].length; j++){
-                if (this.buffer[i][j].name !== "UNUSED"){
-                    return false;
-                }
-            }
+        if (move.oldGrid == "grid"){
+            container = JSON.parse(JSON.stringify(newGrid[move.oldRow][move.oldColumn]));
+            newGrid[move.oldRow][move.oldColumn] = {name: "UNUSED", w: 0};
+            
+        }
+        else if (move.oldGrid == "buffer"){
+            container = JSON.parse(JSON.stringify(newBuffer[move.oldRow][move.oldColumn]));
+            newBuffer[move.oldRow][move.oldColumn] = {name: "UNUSED", w: 0};
+            
         }
 
-        return true;
+        if (move.newGrid == "grid"){
+            newGrid[move.newRow][move.newColumn]= container;
+        }
+        else if (move.newGrid == "buffer"){
+            newBuffer[move.newRow][move.newColumn]= container;
+        }
+
+        return [newGrid, newBuffer];
     }
+
+
+    setBuffer(nex, newY, name){}
 }
-
 
 //Node structure 
 class Node{
 
-    constructor(problem, parent, move, cost, craneMove, bufferMove){
-    // constructor(problem, parent, move, cost, bufferMove){
+    constructor(problem, parent, move, cost, craneMove){
         this.problem = problem;         
         this.parent = parent; 
         this.move = move,
         this.cost = cost;
-        this.craneMove = craneMove; //only if the containers are different
+        this.craneMove = craneMove //only if the containers are different
                                     //else pass [] (gets taken care of in path())
-        this.bufferMove = bufferMove;
         
     }
 
     getCraneMove (){ return this.craneMove;}
     getMove(){return this.move; }
-    getBufferMove(){return this.bufferMove}
 
 
     path() {
@@ -84,18 +88,13 @@ class Node{
         while (currNode.parent != null) {
             if (currNode.move != null && !isNaN(currNode.move.newRow) && !isNaN(currNode.move.newColumn)) {
                 path.unshift(currNode.move);
-                //add crane time
-                if (currNode.craneMove != null && !isNaN(currNode.craneMove.newRow) && !isNaN(currNode.craneMove.newColumn)) {
-                    //path.unshift(currNode.craneMove);
-                    currNode.move.time = (currNode.move.time || 0) + currNode.craneMove.time;
-                }
             }
-
-            //add buffer move
-            if (currNode.bufferMove != null && !isNaN(currNode.bufferMove.newRow) && !isNaN(currNode.bufferMove.newColumn)) {
-                path.unshift(currNode.craneMove);
+    
+            //add crane move
+            if (currNode.craneMove != null && !isNaN(currNode.craneMove.newRow) && !isNaN(currNode.craneMove.newColumn)) {
+                //path.unshift(currNode.craneMove);
             }
-
+    
             currNode = currNode.parent;
         }
     
@@ -108,11 +107,19 @@ class Node{
 
 
 //need to make hasing for 2d object 
-function hashGrid(grid) {
+function hashGrid(problem) {
+    let grid = problem.grid;
+    let buffer = problem.buffer;
     let hash = '';
     for (let i = 0; i < grid.length; i++) {
         for (let j = 0; j < grid[i].length; j++) {
             let cell = grid[i][j];
+            hash += `${i}-${j}-${cell.name}-${cell.w}|`;
+        }
+    }
+    for (let i = 0; i < buffer.length; i++) {
+        for (let j = 0; j < buffer[i].length; j++) {
+            let cell = buffer[i][j];
             hash += `${i}-${j}-${cell.name}-${cell.w}|`;
         }
     }
@@ -146,6 +153,7 @@ function processData(manifestText){
         }
     });
     
+    console.log("GRID HERE: ", grid)
     return grid; 
 }
 

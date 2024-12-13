@@ -2,7 +2,7 @@
 // import { Problem, Node, processData, hashGrid} from './problem.js'
 import {Problem, Node, processData, hashGrid} from './problem.js'
 import {priorityQueue} from './priority.js'
-import {operateSift, getMoves, heuristic} from './Sift.js'
+import {operateSift} from './Sift.js'
 import {findTime, calculate_cranetime} from './balanceHelpers.js'
 
 
@@ -16,6 +16,147 @@ import {findTime, calculate_cranetime} from './balanceHelpers.js'
 
 //global var
 var enable = false;
+
+
+export function getMoves(state){
+    var grid = state.grid;
+    var buffer = state.buffer;
+    var allMoves = [];
+
+    //iterate through grid, validate any crates.
+    for(var i = 0; i < grid.length; i++){
+        for(var j = 0; j < grid[i].length; j++){
+            const container = grid[i][j];
+            if(container && grid[i][j].name !== "NAN" && grid[i][j].name !== "UNUSED" ){
+                var no_containerTop = i === grid.length - 1 || grid[i+1][j].name === "UNUSED";
+
+                if(no_containerTop){
+                    allMoves.push({ moves: validateMoves(state, "grid", i, j)} )
+                }
+            }
+        }
+    }
+
+    //iterate thru buffer
+    for (var i = 0; i < buffer.length; i++){
+        for (var j=0; j< buffer[i].length; j++){
+            const container = buffer[i][j];
+            if (container && buffer[i][j].name !== "NAN" && buffer[i][j].name !=="UNUSED"){
+                const no_containerTop = i === buffer.length - 1 || buffer[i+1][j].name === "UNUSED";
+
+                if(no_containerTop){
+                    allMoves.push({ moves: validateMoves(state, "buffer", i, j)} )
+                }
+            }
+        }
+    }
+    return allMoves
+
+}
+
+function validateMoves(state, source, row, col) { 
+    //console.log(state, source, row, col);
+    var moves = []; 
+    var number_of_moves = 0;
+    var grid = state.grid;
+    var buffer = state.buffer;
+    var grid_type = "buffer";
+    state[source][row][col]
+    //console.log("state: ", state);
+    
+    for (var j = 0; j < grid[0].length; j++) {
+        if (source == "grid" && j === col) continue; 
+        
+        // Find the "lowest" available position 
+        let targetRow = findAvailableColumnSlot(grid, j);
+        
+        // If a valid row 
+        if (targetRow !== -1) {
+            number_of_moves +=1;
+
+            var c = Math.abs(row - targetRow) + Math.abs(col - j); // Manhattan distance
+            var t = -1;
+            if (source == "grid"){
+                t = findTime(grid, row, col, targetRow, j); // Find time with obstacles
+                grid_type = "move";
+            }
+            else if (source == "buffer"){
+                let source_to_pink = findTime(buffer, row, col, 4, 0);
+                let pink_to_target = findTime(grid, 8, 0, targetRow, j)
+                t = source_to_pink + 4 + pink_to_target;
+                grid_type = "buffer";
+            }
+
+            moves.push({
+                type: grid_type,
+                newGrid: "grid",
+                oldGrid: source,
+                name: state[source][row][col].name,
+                weight: state[source][row][col].w,
+                oldRow: row,
+                oldColumn: col,
+                newRow: targetRow,
+                newColumn: j,
+                cost: t,
+                time: t,
+            });
+        }
+       
+    }
+    //if couldnt find enough unused slots in grid, find moves in buffer.
+    if (number_of_moves <= 4){ //4 is just the cap. can be lower, higher, adjust later
+        //for each column
+        for (var i = 0; i < 4+number_of_moves; i++){
+            if (source == "buffer" && i===col) continue;
+            //find lowest available cell per column
+            let targetRow = findAvailableColumnSlot(buffer, i);
+            if (targetRow != -1){
+ //calculate time to get to this slot
+
+                //var c = Math.abs(row - targetRow) + Math.abs(col - j); // Manhattan distance
+                var t = -1;
+
+                if (source == "buffer")
+                    t = findTime(buffer, row, col, targetRow, i); // Find time with obstacles
+                    grid_type = "buffer";
+                    
+                if (source == "grid"){
+                    let source_to_pink = findTime(grid, row, col, 8, 0);
+                    let pink_to_target = findTime(buffer, 4, 0, targetRow, i)
+                    t = source_to_pink + 4 + pink_to_target;
+                    grid_type = "buffer";
+                }
+
+                moves.push({
+                    type: "buffer",
+                    newGrid: "buffer",
+                    oldGrid: source,
+                    name: state[source][row][col].name,
+                    weight: state[source][row][col].w,
+                    oldRow: row,
+                    oldColumn: col,
+                    newRow: targetRow,
+                    newColumn: i,
+                    cost: t,
+                    time: t,
+                });
+            
+            }
+        }
+    }
+    return moves;
+}
+
+function findAvailableColumnSlot(grid, col){
+    for (var i = 0; i < grid.length; i++) {
+        if (grid[i][col].name === "UNUSED") {
+            if (i === 0 || grid[i - 1][col].name !== "UNUSED") {
+                return i;
+            }
+        }
+    }
+    return -1;
+}
 
 
 //calculate weights, and return them
@@ -35,14 +176,7 @@ function calc_weights(grid){
     return {left_weight, right_weight}
 }
 
-function calculate_percentage_diff(weights) {
 
-    var nom = Math.abs(weights.right_weight - weights.left_weight);
-    var den = (weights.left_weight + weights.right_weight) / 2;
-    var tot = (nom / den ) * 100;
-    return tot;
- 
-}
 
 //"total mass of the port side, and the total mass of the starboard side are within ten percent of each other."
 function checkBalance(weights) {
@@ -55,86 +189,7 @@ function checkBalance(weights) {
  
 }
 
-function availSpots(grid){
-    var lowest = Array(grid[0].length).fill(null);
 
-    for (var j = 0; j < grid[0].length; j++) {
-        for (var i = 0; i < grid.length; i++) {
-            if (grid[i][j].name === "UNUSED") {
-                if (i === 0 || grid[i - 1][j].name !== "UNUSED") {
-                    lowest[j] = i;
-                    break;
-                }
-            }
-        }
-    }
-    return lowest;
-}
-
-//helper functions for if containers need to be moved only within buffer
-//and go to ship sgrid
-function validateBuffers(currNode, container, gridLowest, bufferLowest){
-
-    var moves = [];
-    var buffer = currNode.problem.buffer;
-    var grid = currNode.problem.grid;
-    var row = container.row;
-    var col = container.col;
-
-    //all moves within buffer only
-    for (var j = 0; j < buffer[0].length; j++) {
-        if (j === col) continue; 
-    
-        // Find the "lowest" available position 
-        let targetRow = bufferLowest[j]; 
-        // If a valid row 
-        if (targetRow !== null) {
-            var c = Math.abs(row - targetRow) + Math.abs(col - j); // Manhattan distance
-            var t = findTime(buffer, row, col, targetRow, j); // Find time with obstacles
-            
-            moves.push({
-                type: "buffer2",
-                name: buffer[row][col].name,
-                oldRow: row,
-                oldColumn: col,
-                newRow: targetRow,
-                newColumn: j,
-                cost: c,
-                time: t,
-            });
-            
-        }
-
-    
-    }
-
-    var outBufferTime = Math.abs(row - 4) + Math.abs(col - 0) + 4; //4 min additional to transfer to grid
-    for (var j = 0; j < grid[0].length; j++) {
-          
-        // Find the "lowest" available position 
-        let targetRow = gridLowest[j]; 
-        if (targetRow !== null) {                //0 1 2 3
-                
-            //specifically buffer moves that go to the grid (note to self, dont negate col!)
-            var c = Math.abs(3 - targetRow) + Math.abs(0 - j) + outBufferTime; // Manhattan distance
-            const mappedColumn = j % grid[0].length;
-            moves.push({
-                type: "buffer3",
-                name: buffer[row][col].name,
-                oldRow: row,
-                oldColumn: col,
-                newRow: targetRow,
-                newColumn: mappedColumn,
-                cost: c,
-                time: c, //time to go from curr loc in grid to out of grid, + transfer time + to its loc in buffer
-            });
-        }
-
-    }
-
-    return moves;
-
-}
 
 //buffer1: going to buffer
 //buffer2: within buffer
@@ -146,71 +201,6 @@ function heuristic_percentage(grid){
     var tot = (nom / den ) * 100;
     return tot;
 }
-
-
-function heuristic_alternative(child) { //node
-
-    var moves = getMoves(child); 
-    var minCost = Number.MAX_SAFE_INTEGER;
-    var problem = child.problem;
-
-    var newBuffer = null;
-    var newGrid = null;
-
-    for (var move of moves) { //if enabled, then some moves are buffers!
-        for (var m of move.moves) {
-
-            if (enable === true) {
-
-                var penalty = 0;
-                if (m.type === "buffer2") { //moving within buffer
-                    // newBuffer = bridgeMoves(problem.buffer, problem.buffer, m);
-                    newGrid = problem.grid;
-
-                    //deprioritize based on how far away from pink celll
-                    penalty = (m.newColumn + 1)* 45; //case of at 0,0 
-
-                }
-                if (m.type === "buffer3") { //moving back to grid
-                    var grids = bridgeMoves(problem.buffer, problem.grid, m);
-                    newGrid = grids.grid2;
-                    newBuffer = grids.grid1;
-
-                    //compute weight diff!
-                }
-                if (m.type === "buffer1") { //moving to buffer
-                    var grids = bridgeMoves(problem.grid, problem.buffer, m);
-                    newGrid = grids.grid1;
-                    newBuffer = grids.grid2;
-                    penalty = (m.newColumn + 1)* 45;
-                }
-                if (m.type === "move") { //
-                    newGrid = problem.getNewGrid(problem.grid, m);
-                    newBuffer = problem.buffer;
-                }
-
-                var newWeights = calc_weights(newGrid);
-                penalty = Math.abs(newWeights.left_weight - newWeights.right_weight);
-
-                var mCost = m.time + m.cost + penalty;
-                minCost = Math.min(minCost, mCost);
-
-            } else { // Grid move only
-                newGrid = problem.getNewGrid(problem.grid, m);
-                var newWeights = calc_weights(newGrid);
-                var newWeightDiff = Math.abs(newWeights.left_weight - newWeights.right_weight);
-                var mCost = 2 * m.time + m.cost + newWeightDiff * 0.0001;
-                minCost = Math.min(minCost, mCost); 
-            }
-        }
-    }
-
-    return minCost;
-}
-
-
-
-
 
 
 
@@ -277,55 +267,6 @@ function initialBuffer(){ //only 4 x 24
     }
     return b;
 }
-
-
-//grid1: old loc of container (updated to newGrid1)
-//grid2: new loc of container (updated to newGrid2)
-function bridgeMoves(grid1, grid2, m) {
-    // Ensure deep copies to avoid shared references
-    var newGrid1 = grid1.map(row => row.map(cell => ({ ...cell })));
-    var newGrid2 = grid2.map(row => row.map(cell => ({ ...cell })));
-
-    var container = newGrid1[m.oldRow][m.oldColumn];
-    newGrid1[m.oldRow][m.oldColumn] = { name: "UNUSED", w: 0 }; 
-    newGrid2[m.newRow][m.newColumn] = container;
-
-    return { grid1: newGrid1, grid2: newGrid2 };
-}
-
-
-
-function updateSol(solutionPath) {
-
-    solutionPath.forEach((move) =>{
-        move.oldRow += 1, 
-        move.oldColumn += 1,
-        move.newRow += 1,
-        move.newColumn += 1;
-
-        if (move.type === "buffer1"){
-            move.newColumn  = -move.newColumn;
-            move.type = "buffer"
-        }
-
-        if (move.type === "buffer2"){
-            move.newColumn  = -move.newColumn;
-            move.oldColumn  = -move.oldColumn
-            move.type = "buffer"
-        }
-
-        if (move.type === "buffer3"){
-            move.oldColumn  = -move.newColumn
-            move.type = "buffer"
-        }
-
-
-    });
-
-    return solutionPath;
-   
-}
-
 
 
 //f(n) = g(n) + h(n);
@@ -414,7 +355,7 @@ export default function handleBalancing(manifestText) {
             }
         }
     }
-        var lastElement = {"newRow":9, "newColumn":1};
+        var lastElement = {"newRow":8, "newColumn":0};
         if (solutionPath.length >0){ //if not empty
             lastElement = solutionPath[solutionPath.length - 1];
             console.log("solution path 1 : ", lastElement);

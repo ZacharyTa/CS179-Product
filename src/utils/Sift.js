@@ -1,6 +1,7 @@
 import {Problem, Node, processData, hashGrid} from './problem.js'
 import {priorityQueue} from './priority.js'
-import {findTime, calculate_cranetime} from './balanceHelpers.js'
+import {calculate_cranetime} from './balanceHelpers.js'
+import {getMoves} from './handleBalancing.js'
 
 //sorts all cargo in the ship
 //returns a sorted list of containers
@@ -9,151 +10,6 @@ export function sortCrates(crates){
 }
 
 
-
-
-
-export function getMoves(state){
-    var grid = state.grid;
-    var buffer = state.buffer;
-    var allMoves = [];
-
-    //iterate through grid, validate any crates.
-    for(var i = 0; i < grid.length; i++){
-        for(var j = 0; j < grid[i].length; j++){
-            const container = grid[i][j];
-            if(container && grid[i][j].name !== "NAN" && grid[i][j].name !== "UNUSED" ){
-                var no_containerTop = i === grid.length - 1 || grid[i+1][j].name === "UNUSED";
-
-                if(no_containerTop){
-                    allMoves.push({ moves: validateMoves(state, "grid", i, j)} )
-                }
-            }
-        }
-    }
-
-    //iterate thru buffer
-    for (var i = 0; i < buffer.length; i++){
-        for (var j=0; j< buffer[i].length; j++){
-            const container = buffer[i][j];
-            if (container && buffer[i][j].name !== "NAN" && buffer[i][j].name !=="UNUSED"){
-                const no_containerTop = i === buffer.length - 1 || buffer[i+1][j].name === "UNUSED";
-
-                if(no_containerTop){
-                    allMoves.push({ moves: validateMoves(state, "buffer", i, j)} )
-                }
-            }
-        }
-    }
-    return allMoves
-
-}
-
-function findAvailableColumnSlot(grid, col){
-    for (var i = 0; i < grid.length; i++) {
-        if (grid[i][col].name === "UNUSED") {
-            if (i === 0 || grid[i - 1][col].name !== "UNUSED") {
-                return i;
-            }
-        }
-    }
-    return -1;
-}
-
-function validateMoves(state, source, row, col) { 
-    //console.log(state, source, row, col);
-    var moves = []; 
-    var number_of_moves = 0;
-    var grid = state.grid;
-    var buffer = state.buffer;
-    var grid_type = "buffer";
-    state[source][row][col]
-
-    
-    
-    //console.log("state: ", state);
-    
-    for (var j = 0; j < grid[0].length; j++) {
-        if (source == "grid" && j === col) continue; 
-        
-        // Find the "lowest" available position 
-        let targetRow = findAvailableColumnSlot(grid, j);
-        
-        // If a valid row 
-        if (targetRow !== -1) {
-            number_of_moves +=1;
-
-            var c = Math.abs(row - targetRow) + Math.abs(col - j); // Manhattan distance
-            var t = -1;
-            if (source == "grid"){
-                t = findTime(grid, row, col, targetRow, j); // Find time with obstacles
-                grid_type = "move";
-            }
-            else if (source == "buffer"){
-                let source_to_pink = findTime(buffer, row, col, 4, 0);
-                let pink_to_target = findTime(grid, 8, 0, targetRow, j)
-                t = source_to_pink + 4 + pink_to_target;
-                grid_type = "buffer";
-            }
-
-            moves.push({
-                type: grid_type,
-                newGrid: "grid",
-                oldGrid: source,
-                name: state[source][row][col].name,
-                weight: state[source][row][col].w,
-                oldRow: row,
-                oldColumn: col,
-                newRow: targetRow,
-                newColumn: j,
-                cost: t,
-                time: t,
-            });
-        }
-       
-    }
-    //if couldnt find enough unused slots in grid, find moves in buffer.
-    if (number_of_moves <= 4){ //8 is just the cap. can be lower, higher, adjust later
-        //for each column
-        for (var i = 0; i < 4+number_of_moves; i++){
-            if (source == "buffer" && i===col) continue;
-            //find lowest available cell per column
-            let targetRow = findAvailableColumnSlot(buffer, i);
-            if (targetRow != -1){
- //calculate time to get to this slot
-
-                //var c = Math.abs(row - targetRow) + Math.abs(col - j); // Manhattan distance
-                var t = -1;
-
-                if (source == "buffer")
-                    t = findTime(buffer, row, col, targetRow, i); // Find time with obstacles
-                    grid_type = "buffer";
-                    
-                if (source == "grid"){
-                    let source_to_pink = findTime(grid, row, col, 8, 0);
-                    let pink_to_target = findTime(buffer, 4, 0, targetRow, i)
-                    t = source_to_pink + 4 + pink_to_target;
-                    grid_type = "buffer";
-                }
-
-                moves.push({
-                    type: "buffer",
-                    newGrid: "buffer",
-                    oldGrid: source,
-                    name: state[source][row][col].name,
-                    weight: state[source][row][col].w,
-                    oldRow: row,
-                    oldColumn: col,
-                    newRow: targetRow,
-                    newColumn: i,
-                    cost: t,
-                    time: t,
-                });
-            
-            }
-        }
-    }
-    return moves;
-}
 
 
 //returns grid goal state
@@ -344,7 +200,7 @@ export function operateSift(ship){
         }
     }
 
-    var lastElement = {"newRow":9, "newColumn":1};
+    var lastElement = {"newRow":8, "newColumn":0};
     if (solutionPath.length >0){ //if not empty
         lastElement = solutionPath[solutionPath.length - 1];
         console.log("solution path 1 : ", lastElement);

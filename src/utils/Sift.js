@@ -275,21 +275,29 @@ export function operateSift(ship){
     var root = new Node(p, null, null, 0, null);
     frontier.enqueue(root, 0);
     console.log("root: ", root);
-    let counter = 0;
     while (!frontier.isEmpty()){
         
         var current = frontier.dequeue();
         
         //console.log("found: ", current.move);
        //debugger;
+        
         if (isSifted(current.problem.grid, target)){
             console.log("SIFTED: ", current);
-
             if (current.cost < optimal_cost){
                 solutionPath = current.path();
                 optimal_cost = current.cost;
                 console.log("a more optimal solution found");
+
+                //SIFTing finds a solution in a reasonable amount of time.
+                //but in search for a greater solution it takes an unreasonable amount, so we limit this.
+                //this feature is only in sift, which is already a last case scenario.
+                //put faith in the heuristic to give us an optimal solution, but not the MOST optimal due to this limit.
+                break;
             }
+
+            
+      
         }
 
         //now i need to hash the grid into a key and add it to the visited map.
@@ -318,7 +326,7 @@ export function operateSift(ship){
                     
                     move.time += craneTime; //add time
                 
-                    var newCost = current.cost + move.cost + craneTime;
+                    var newCost = current.cost + move.cost+ craneTime;
                     if ((newCost) > optimal_cost) {
                         continue;
                     }

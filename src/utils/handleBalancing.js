@@ -372,9 +372,9 @@ export default function handleBalancing(manifestText) {
         if (checkBalance(weights) && currNode.problem.bufferEmpty() ) {  //goal reached
             console.log("checking for stopping condition");
             
-            if ( optimal_cost > currNode.move.cost){
+            if ( optimal_cost > currNode.cost){
                 solutionPath = currNode.path();
-                optimal_cost = currNode.move.cost;
+                optimal_cost = currNode.cost;
                 console.log("solution: ", solutionPath)
             }
 
@@ -385,7 +385,6 @@ export default function handleBalancing(manifestText) {
 
         if ((!visited.has(gridHash) || visited.get(gridHash) > currNode.cost)) {
             visited.set(gridHash, currNode.cost); 
-            console.log(0);
 
             //get possible moves
             var moves = getMoves(currNode.problem) //if enabled, should have buffer moves
@@ -393,17 +392,15 @@ export default function handleBalancing(manifestText) {
                 for( var i of m.moves){
                     //if this move's total cost is more expensive, disregard.
                     if ((currNode.cost + i.cost) > optimal_cost) continue;
-                    
-                    var [newGrid, newBuffer] = currNode.problem.getNewGrids(currNode.problem.grid, currNode.problem.buffer, i);
-                    var newP = new Problem(newGrid, newBuffer);
 
                     let craneTime = calculate_cranetime(currNode, i);
                     
                     i.time+= craneTime;
-
-                    //deprioritizing craneTime, since initialCrane time has too much influence on the problem path
-                    //var newCost = currNode.cost + i.cost; +  0.001*craneTime + bufferTime; 
                     var newCost = currNode.cost + i.cost+craneTime;
+                    if ((newCost) > optimal_cost) continue;
+                    
+                    var [newGrid, newBuffer] = currNode.problem.getNewGrids(currNode.problem.grid, currNode.problem.buffer, i);
+                    var newP = new Problem(newGrid, newBuffer);
                     var child = new Node(newP, currNode, i, newCost, null);
                     var h = heuristic_percentage(newP.grid);
 
@@ -413,11 +410,6 @@ export default function handleBalancing(manifestText) {
             }
         }
     }
-
- 
-
-    
-
         var lastElement = {"newRow":9, "newColumn":1};
         if (solutionPath.length >0){ //if not empty
             lastElement = solutionPath[solutionPath.length - 1];

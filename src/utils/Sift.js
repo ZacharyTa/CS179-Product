@@ -67,6 +67,8 @@ function validateMoves(state, source, row, col) {
     var buffer = state.buffer;
     var grid_type = "buffer";
     state[source][row][col]
+
+    
     
     //console.log("state: ", state);
     
@@ -254,6 +256,7 @@ export function operateSift(ship){
     var frontier = new priorityQueue();
     var visited = new Map();
     var solutionPath = [];
+    var optimal_cost = Infinity;
 
     //obtain Goal state
     var target = obtainGoalState(ship);
@@ -282,31 +285,10 @@ export function operateSift(ship){
         if (isSifted(current.problem.grid, target)){
             console.log("SIFTED: ", current);
 
-            solutionPath = current.path();
-
-            
-
-            var lastElement = {"newRow":9, "newColumn":1};
-            if (solutionPath.length >0){ //if not empty
-                lastElement = solutionPath[solutionPath.length - 1];
-                console.log("solution path 1 : ", lastElement);
+            if (current.cost < optimal_cost){
+                solutionPath = current.path();
+                optimal_cost = current.cost;
             }
-
-            var end = Math.abs(8 - lastElement.newRow) + Math.abs(0 - lastElement.newColumn);
-
-            //Adds this at the very end as a reminder to put the crane back in the right place.
-            solutionPath.push({
-                type:"Move crane to original position",
-                name: "crane",
-                oldRow: lastElement.newRow,
-                oldColumn: lastElement.newColumn,
-                newRow: 8,
-                newColumn: 0,
-                time: end,
-                cost: 0, //removing 
-            })
-
-            break;
         }
 
         //now i need to hash the grid into a key and add it to the visited map.
@@ -315,8 +297,6 @@ export function operateSift(ship){
         if (!visited.has(gridHash) || visited.get(gridHash) > current.cost){
             visited.set(gridHash, current.cost);
             counter+=1;
-            
-            console.log(0);
             //console.log(current);
             if (counter >1000){
             
@@ -326,8 +306,6 @@ export function operateSift(ship){
                // debugger;
                 
             }
-            
-
             //now i must get all possible moves, and begin astar tree building.
             
             var all_possible_moves_from_current_state =  getMoves(current.problem); //push buffer as well
@@ -336,15 +314,16 @@ export function operateSift(ship){
            //EXPAND NODE
             for (var single_container_all_moves of all_possible_moves_from_current_state){
                 for (var move of single_container_all_moves.moves){
-                    
-                    var [newGrid, newBuffer] = current.problem.getNewGrids(current.problem.grid, current.problem.buffer, move);
-                    var newProblem = new Problem(newGrid, newBuffer);
-
+                    if ((current.cost + move.cost) > optimal_cost) continue;
                     let craneTime = calculate_cranetime(current, move);
                     
                     move.time += craneTime; //add time
                 
                     var newCost = current.cost + move.cost + craneTime;
+                    if ((newCost) > optimal_cost) continue;
+
+                    var [newGrid, newBuffer] = current.problem.getNewGrids(current.problem.grid, current.problem.buffer, move);
+                    var newProblem = new Problem(newGrid, newBuffer);
                     var child = new Node(newProblem, current, move, newCost, null);
 
                     const h = heuristic(move, newProblem, target);
@@ -356,6 +335,25 @@ export function operateSift(ship){
         }
     }
 
+    var lastElement = {"newRow":9, "newColumn":1};
+    if (solutionPath.length >0){ //if not empty
+        lastElement = solutionPath[solutionPath.length - 1];
+        console.log("solution path 1 : ", lastElement);
+    }
+
+    var end = Math.abs(8 - lastElement.newRow) + Math.abs(0 - lastElement.newColumn);
+
+    //Adds this at the very end as a reminder to put the crane back in the right place.
+    solutionPath.push({
+        type:"Move crane to original position",
+        name: "crane",
+        oldRow: lastElement.newRow,
+        oldColumn: lastElement.newColumn,
+        newRow: 8,
+        newColumn: 0,
+        time: end,
+        cost: 0, //removing 
+    })
     return solutionPath.map((move)=>({
         ...move,
         oldRow: move.oldRow + 1,

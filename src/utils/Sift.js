@@ -1,4 +1,4 @@
-import {Problem, Node, processData, hashGrid} from './problemSift.js'
+import {Problem, Node, processData, hashGrid} from './problem.js'
 import {priorityQueue} from './priority.js'
 import {findTime, calculate_cranetime} from './balanceHelpers.js'
 

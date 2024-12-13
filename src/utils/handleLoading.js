@@ -87,7 +87,7 @@ function findObstacles(ship, row, col, newCol){
         console.log(ship[i][col+dir].name === "UNUSED");
         console.log(ship[i][col].name);
         if(ship[i][col+dir].name === "UNUSED"){
-            return i;
+            return [i, Math.abs(row - i)];
         }
     }
     return 8;
@@ -153,18 +153,25 @@ function addMoves(parent, moves, ship, i, j, operations){
                 console.log(parent.move)
                 let r = 0;
                 let c = 0;
+                let diff = 0;
+                if(parent.move.type == "offload"){
+                    dist += 2;
+                }
                 if(parent.move.newRow == -1){
                     r = 8;
                     c = 0;
                 }else {
-                    r = findObstacles(ship, parent.move.newRow, parent.move.newColumn, j);
+                    let obst = findObstacles(ship, parent.move.newRow, parent.move.newColumn, j);
+                    r = obst[0];
+                    diff = obst[1];
                     console.log(r);
                     c = parent.move.newColumn;
                 }
                 if(parent.move.type == "buffer") {
                     dist += Math.abs(parent.move.newRow - 4) + Math.abs(parent.move.newColumn - 0) + 4 + Math.abs(8-i) + Math.abs(0 - j);
                 }else{
-                    dist += Math.abs(r - i) + Math.abs(c - j) + Math.abs(r - parent.move.newRow);
+                    dist += Math.abs(r - i) + Math.abs(c - j)
+                    dist += diff > 0 ? Math.abs(r - parent.move.newRow) : 0;
                 }
             }else {
                 dist += Math.abs(8 - i) + Math.abs(0 - j);
@@ -422,6 +429,19 @@ function addBufferLoads(parent, operations){
     }
     return curr;
 }
+
+function addEndCraneMove(curr) {
+    let type = curr.move.type;
+    let r = curr.move.newRow;
+    let c = curr.move.newColumn;
+    if (type == "offload"){
+        curr.move.time += 2;
+    }else if(type == "onload"){
+        curr.move.time += Math.abs(r - 8) + Math.abs(c - 0);
+    }else if(type == "buffer"){
+        curr.move.time += Math.abs(r - 8) + Math.abs(c - 0);
+    }
+}
 //f(n) = g(n) + h(n);
 //g(n) -> current time
 //h(n) -> estimated cost of time to reach goal 
@@ -470,6 +490,7 @@ export default function handleLoading(manifestText, operations) {
             if(!curr.problem.bufferEmpty()){
                 curr = addBufferLoads(curr, operations);
             }
+            addEndCraneMove(curr);
             solutionPath = curr.path();
             break;
         }
@@ -503,9 +524,9 @@ export default function handleLoading(manifestText, operations) {
 
 let text = `\
 [01,01], {00000}, NAN
-[01,02], {00060}, Catfish
-[01,03], {00020}, Dogana
-[01,04], {00020}, Batons
+[01,02], {00099}, Cat
+[01,03], {00100}, Dog
+[01,04], {00000}, UNUSED
 [01,05], {00000}, UNUSED
 [01,06], {00000}, UNUSED
 [01,07], {00000}, UNUSED
@@ -515,7 +536,7 @@ let text = `\
 [01,11], {00000}, UNUSED
 [01,12], {00000}, NAN
 [02,01], {00000}, UNUSED
-[02,02], {00020}, Rations for US Army
+[02,02], {00000}, UNUSED
 [02,03], {00000}, UNUSED
 [02,04], {00000}, UNUSED
 [02,05], {00000}, UNUSED
@@ -599,12 +620,12 @@ let text = `\
 [08,11], {00000}, UNUSED
 [08,12], {00000}, UNUSED`;
 let testOperations = [
-    {type: "onload", name: "Nat"},
-    {type: "offload", name: "Catfish"},
+    // {type: "onload", name: "Nat"},
+    {type: "offload", name: "Cat"},
     // {type: "offload", name: "Hen"},
-    {type:"offload", name: "Batons"},
+    // {type:"offload", name: "Batons"},
     // {type: "onload", name: "Rat"},
-    // {type: "onload", name: "Dog"},
+    {type: "offload", name: "Dog"},
     ];
 let testRes = handleLoading(text, testOperations);
 console.log(testRes);

@@ -383,7 +383,7 @@ function heuristic(move, problem, goal){
     let h2 = heuristic_state(move, problem.grid, goal);
     //let h3 = heuristic_buffer(problem, move);
     
-    return (h1*1.25+h2*2);
+    return (h1*1.25+h2*3);
 }
 
 

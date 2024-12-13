@@ -288,6 +288,7 @@ export function operateSift(ship){
             if (current.cost < optimal_cost){
                 solutionPath = current.path();
                 optimal_cost = current.cost;
+                console.log("a more optimal solution found");
             }
         }
 
@@ -296,10 +297,13 @@ export function operateSift(ship){
         
         if (!visited.has(gridHash) || visited.get(gridHash) > current.cost){
             visited.set(gridHash, current.cost);
-
-            console.log(0);
             
             //now i must get all possible moves, and begin astar tree building.
+
+            //end branch, no point contemplating.
+            if (current.cost > optimal_cost){
+                continue;
+            }
             
             var all_possible_moves_from_current_state =  getMoves(current.problem); //push buffer as well
 

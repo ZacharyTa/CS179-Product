@@ -386,6 +386,10 @@ export default function handleBalancing(manifestText) {
         if ((!visited.has(gridHash) || visited.get(gridHash) > currNode.cost)) {
             visited.set(gridHash, currNode.cost); 
 
+            if (currNode.cost > optimal_cost){
+                continue;
+            }
+
             //get possible moves
             var moves = getMoves(currNode.problem) //if enabled, should have buffer moves
             for(var m of moves){

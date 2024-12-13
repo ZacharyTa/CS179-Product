@@ -130,9 +130,9 @@ export default function LoadPage() {
       }
     >
       {!isLoading && (
-        <div className="h-full outline outline-red-500">
-          <div className="grid grid-flow-col grid-cols-4 grid-rows-5 gap-4 outline outline-red-500">
-            <div className="col-span-2 row-span-3 row-start-2 outline outline-red-500">
+        <div className="h-full">
+          <div className="grid grid-flow-col grid-cols-4 grid-rows-5 gap-4">
+            <div className="col-span-2 row-span-3 row-start-2">
               {manifestData && (
                 <ShipGrid
                   columns={manifestData.columns}
@@ -144,7 +144,7 @@ export default function LoadPage() {
                 />
               )}
             </div>
-            <div className="col-span-3 col-start-1 row-start-5 outline outline-red-500">
+            <div className="col-span-3 col-start-1 row-start-5">
               <div className="flex flex-row items-center gap-2">
                 <div className="flex-1">
                   <Log />

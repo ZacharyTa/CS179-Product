@@ -296,16 +296,9 @@ export function operateSift(ship){
         
         if (!visited.has(gridHash) || visited.get(gridHash) > current.cost){
             visited.set(gridHash, current.cost);
-            counter+=1;
-            //console.log(current);
-            if (counter >1000){
-            
-                counter = 0;
 
-                console.log(current);
-               // debugger;
-                
-            }
+            console.log(0);
+            
             //now i must get all possible moves, and begin astar tree building.
             
             var all_possible_moves_from_current_state =  getMoves(current.problem); //push buffer as well
@@ -314,13 +307,17 @@ export function operateSift(ship){
            //EXPAND NODE
             for (var single_container_all_moves of all_possible_moves_from_current_state){
                 for (var move of single_container_all_moves.moves){
-                    if ((current.cost + move.cost) > optimal_cost) continue;
+                    if ((current.cost + move.cost) > optimal_cost) {
+                        continue;
+                    }
                     let craneTime = calculate_cranetime(current, move);
                     
                     move.time += craneTime; //add time
                 
                     var newCost = current.cost + move.cost + craneTime;
-                    if ((newCost) > optimal_cost) continue;
+                    if ((newCost) > optimal_cost) {
+                        continue;
+                    }
 
                     var [newGrid, newBuffer] = current.problem.getNewGrids(current.problem.grid, current.problem.buffer, move);
                     var newProblem = new Problem(newGrid, newBuffer);

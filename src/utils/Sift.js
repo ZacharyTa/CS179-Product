@@ -1,6 +1,6 @@
 import {Problem, Node, processData, hashGrid} from './problemSift.js'
 import {priorityQueue} from './priority.js'
-//import {findTime} from './handleBalancing.js'
+import {findTime, calculate_cranetime} from './balanceHelpers.js'
 
 //sorts all cargo in the ship
 //returns a sorted list of containers
@@ -9,48 +9,10 @@ export function sortCrates(crates){
 }
 
 
-export function findTime(input_grid, r, c, i ,j){
-    let grid = input_grid.map(row => [...row]);
-    let top_row = [];
-    for (let i =0; i < input_grid[0].length; i++){
-        top_row.push({"w":0, "name":"UNUSED"});
-    }
-    grid.push(top_row);
-    
-    //directions
-    var dir = [ {row: 1, col: 0 },
-                {row: -1, col: 0},
-                {row: 0, col: -1},
-                {row: 0, col: 1 }]
-
-    var q = [{row: r, col: c, time: 0}];
-    var seen = new Set();
-    seen.add(`${r}-${c}`);
-
-    while (q.length > 0){
-        var {row, col, time} = q.shift();
-        if(row === i && col ===j){return time;}
-        
-        for( var{row: dr, col: dc} of dir){
-            var newR = row + dr;
-            var newC = col + dc;
-            // if with grid bounds
-            if(newR >=0 && newR < grid.length && newC >= 0 && newC < grid[0].length){
-                //if not visited and available to be moved to (so no nan or other containers)
-                if (!seen.has(`${newR}-${newC}`) && grid[newR][newC].name === "UNUSED"){
-                    seen.add(`${newR}-${newC}`);
-                    q.push({row: newR, col: newC, time:time + 1});
-                }
-            }
-        }
-    }
-    
-    debugger;
-    return 10000; //to deprioritize inside frontier priority and heuristic
-}
 
 
-function getMoves(state){
+
+export function getMoves(state){
     var grid = state.grid;
     var buffer = state.buffer;
     var allMoves = [];
@@ -103,7 +65,7 @@ function validateMoves(state, source, row, col) {
     var number_of_moves = 0;
     var grid = state.grid;
     var buffer = state.buffer;
-    var buffer_type = "buffer";
+    var grid_type = "buffer";
     state[source][row][col]
     
     //console.log("state: ", state);
@@ -120,17 +82,19 @@ function validateMoves(state, source, row, col) {
 
             var c = Math.abs(row - targetRow) + Math.abs(col - j); // Manhattan distance
             var t = -1;
-            if (source == "grid")
+            if (source == "grid"){
                 t = findTime(grid, row, col, targetRow, j); // Find time with obstacles
-            if (source == "buffer"){
+                grid_type = "move";
+            }
+            else if (source == "buffer"){
                 let source_to_pink = findTime(buffer, row, col, 4, 0);
                 let pink_to_target = findTime(grid, 8, 0, targetRow, j)
                 t = source_to_pink + 4 + pink_to_target;
-                buffer_type = "buffer";
+                grid_type = "buffer";
             }
 
             moves.push({
-                type: "move",
+                type: grid_type,
                 newGrid: "grid",
                 oldGrid: source,
                 name: state[source][row][col].name,
@@ -160,13 +124,13 @@ function validateMoves(state, source, row, col) {
 
                 if (source == "buffer")
                     t = findTime(buffer, row, col, targetRow, i); // Find time with obstacles
-                    buffer_type = "buffer2";
+                    grid_type = "buffer";
                     
                 if (source == "grid"){
                     let source_to_pink = findTime(grid, row, col, 8, 0);
                     let pink_to_target = findTime(buffer, 4, 0, targetRow, i)
                     t = source_to_pink + 4 + pink_to_target;
-                    buffer_type = "buffer1";
+                    grid_type = "buffer";
                 }
 
                 moves.push({
@@ -328,7 +292,6 @@ export function operateSift(ship){
                 console.log("solution path 1 : ", lastElement);
             }
 
-            
             var end = Math.abs(8 - lastElement.newRow) + Math.abs(0 - lastElement.newColumn);
 
             //Adds this at the very end as a reminder to put the crane back in the right place.
@@ -377,75 +340,11 @@ export function operateSift(ship){
                     var [newGrid, newBuffer] = current.problem.getNewGrids(current.problem.grid, current.problem.buffer, move);
                     var newProblem = new Problem(newGrid, newBuffer);
 
-                    //oldMove refers to the dequeued current node's last move that got them to this position.
-                    //in contrast, move variable is the new move that is used to create this new, updated grid.
-                    var oldMove = current.getMove();
-                    let craneTime = 0;
+                    let craneTime = calculate_cranetime(current, move);
                     
-                    if (!oldMove){
-                         craneTime = Math.abs(8 - move.oldRow) + Math.abs(0 - move.oldColumn);
-                        
-                    }
-                    else{
-                        if (oldMove.newGrid == move.oldGrid){
-                          
-                            var temp = JSON.parse(JSON.stringify(current.problem.grid[move.oldRow][move.oldColumn]));
-                            current.problem.grid[move.oldRow][move.oldColumn] = {"name":"UNUSED", "w":0};
-                            craneTime = findTime(current.problem.grid, oldMove.newRow, oldMove.newColumn, move.oldRow, move.oldColumn);
-
-
-                            if (craneTime == 10000){
-                                console.log(current.problem.grid, oldMove.newRow, oldMove.newColumn, move.oldRow, move.oldColumn);
-                                //debugger;
-                            }
-
-                            current.problem.grid[move.oldRow][move.oldColumn] = temp;
-
-
-                        }
-                        //else if oldmove.newGrid is buffer and move.oldgrid is grid, get findtime of buffer to 4, 0
-                    //else if oldmove.newgrid is grid andmove.oldgrid is buffer
-
-                        else if (oldMove.newGrid == "buffer" && move.oldGrid == "grid"){
-                            var temp = JSON.parse(JSON.stringify(current.problem.grid[move.oldRow][move.oldColumn]));
-                            current.problem.grid[move.oldRow][move.oldColumn] = {"name":"UNUSED", "w":0};
-
-                            // console.log("BUFFER TO GRID");
-                            let buffer_to_pink = findTime(current.problem.buffer, oldMove.newRow, oldMove.newColumn, 4, 0);
-                            // console.log("p1 pass", buffer_to_pink);
-                            console.log(current.problem.grid, 8, 0, move.oldRow, move.oldColumn);
-                            let pink_to_grid = findTime(current.problem.grid, 8, 0, move.oldRow, move.oldColumn);
-
-                            current.problem.grid[move.oldRow][move.oldColumn] = temp;
-
-                            craneTime = buffer_to_pink + pink_to_grid + 4;
-                        }
-                        else if (oldMove.newGrid== "grid" && move.oldGrid == "buffer"){
-                            var temp = JSON.parse(JSON.stringify(current.problem.buffer[move.oldRow][move.oldColumn]));
-                            current.problem.buffer[move.oldRow][move.oldColumn] = {"name":"UNUSED", "w":0};
-
-                            // console.log("GRID TO BUFFER");
-
-                            let grid_to_pink = findTime(current.problem.grid, oldMove.newRow, oldMove.newColumn, 8, 0);
-                            // console.log("p1 pass");
-                            let pink_to_buffer = findTime(current.problem.buffer, move.oldRow, move.oldColumn, 4, 0);
-                            
-
-                            current.problem.buffer[move.oldRow][move.oldColumn] = temp;
-                            craneTime = grid_to_pink + pink_to_buffer + 4;
-
-
-                        }
-                        
-                    }
                     move.time += craneTime; //add time
-                    
-                    
-                    
-                    
-
                 
-                    var newCost = current.cost + move.cost //+ cranetime;
+                    var newCost = current.cost + move.cost + craneTime;
                     var child = new Node(newProblem, current, move, newCost, null);
 
                     const h = heuristic(move, newProblem, target);

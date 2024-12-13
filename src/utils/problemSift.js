@@ -14,7 +14,7 @@ class Problem{
     getTime(){return this.time;}
 
     bufferEmpty(){
-        return this.buffer.every(row => row.every(cell => cell === "UNUSED"))
+        return this.buffer.every(row => row.every(cell => cell["name"] === "UNUSED" || cell["name"] === "NAN"))
     }
 
     //function to return a grid with a new move; 

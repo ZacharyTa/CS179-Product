@@ -225,7 +225,11 @@ function addMoves(parent, moves, ship, i, j, operations){
                     console.log(r);
                     c = parent.move.newColumn;
                 }
-                dist += Math.abs(r - i) + Math.abs(c - j) + Math.abs(parent.move.newRow - r + 1);
+                if(parent.move.type == "offload"){
+                    dist += Math.abs(r - i) + Math.abs(c - j) + 2;    
+                }else{
+                    dist += Math.abs(r - i) + Math.abs(c - j) + Math.abs(parent.move.newRow - r + 1);
+                }
             }else {
                 dist += Math.abs(8 - i) + Math.abs(0 - j);
             }
@@ -490,7 +494,9 @@ export default function handleLoading(manifestText, operations) {
             if(!curr.problem.bufferEmpty()){
                 curr = addBufferLoads(curr, operations);
             }
-            addEndCraneMove(curr);
+            if(curr.move != null){
+                addEndCraneMove(curr);
+            }
             solutionPath = curr.path();
             break;
         }
